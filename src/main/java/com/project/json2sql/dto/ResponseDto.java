@@ -35,5 +35,10 @@ public class ResponseDto {
 		this.result = result;
 	}
 
+	@Override
+	public String toString() {
+		return "ResponseDto [status=" + status + ", result=" + result + "]";
+	}
+
 
 }

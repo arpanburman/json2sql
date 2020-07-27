@@ -48,5 +48,11 @@ public class ResultDto {
 	public void setProperties(List<PropertyDto> properties) {
 		this.properties = properties;
 	}
+	@Override
+	public String toString() {
+		return "ResultDto [summary=" + summary + ", pages=" + pages + ", buildings=" + buildings + ", properties="
+				+ properties + "]";
+	}
 
+	
 }

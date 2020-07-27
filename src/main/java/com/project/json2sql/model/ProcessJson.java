@@ -31,6 +31,10 @@ public class ProcessJson {
 	
 	@Column(name="updated_by")
 	private String updatedBy;
+	
+	@Column(name="file_path")
+	private String filePath;
+
 
 	public long getProcessId() {
 		return processId;
@@ -79,7 +83,14 @@ public class ProcessJson {
 	public void setUpdatedBy(String updatedBy) {
 		this.updatedBy = updatedBy;
 	}
-	
+
+	public String getFilePath() {
+		return filePath;
+	}
+
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
+	}
 	
 
 }

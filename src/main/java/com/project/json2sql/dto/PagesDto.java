@@ -42,4 +42,9 @@ public class PagesDto {
         this.currentPage = currentPage;
     }
 
+	@Override
+	public String toString() {
+		return "PagesDto [totalPages=" + totalPages + ", currentPage=" + currentPage + "]";
+	}
+
 }

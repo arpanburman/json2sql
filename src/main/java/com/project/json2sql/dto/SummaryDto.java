@@ -89,5 +89,11 @@ public class SummaryDto {
         this.forRent = forRent;
     }
 
+	@Override
+	public String toString() {
+		return "SummaryDto [total=" + total + ", onTheMarket=" + onTheMarket + ", recentlySold=" + recentlySold
+				+ ", other=" + other + ", isLastPage=" + isLastPage + ", forRent=" + forRent + "]";
+	}
+
 
 }

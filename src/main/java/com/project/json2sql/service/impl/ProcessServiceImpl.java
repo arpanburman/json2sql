@@ -1,11 +1,17 @@
 package com.project.json2sql.service.impl;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.project.json2sql.dto.MainJson;
@@ -24,6 +30,9 @@ import com.project.json2sql.util.DateUtil;
 @Service
 public class ProcessServiceImpl implements ProcessService{
 	
+	@Value("${localUploadPath}")
+    private String localUploadPath;
+	
 	@Autowired
 	ProcessRepository processRepository;
 	
@@ -39,7 +48,9 @@ public class ProcessServiceImpl implements ProcessService{
 		String isProcess = "N";
 		try {
 			ProcessJson processJson = new ProcessJson();
-			
+			String path = writeInFile(jsonObj.toString(), localUploadPath); 
+			logger.info("Stored File Path::"+path);
+			processJson.setFilePath(path);
 			processJson.setStatus(jsonObj.getResponse().getStatus());
 			processJson.setCreatedDate(DateUtil.getCurrentDateTime());
 			processJson.setCreatedBy("System");
@@ -138,6 +149,25 @@ public class ProcessServiceImpl implements ProcessService{
 			logger.error("File not Saved Properly::: "+e);
 		}
 		return isProcess;
+	}
+	
+	
+	
+	public static String fileSuffix() {
+		String fileSuffix = new SimpleDateFormat("ddMMyyyyHHmmss").format(new Date());
+		return fileSuffix;
+	}
+	
+	public static String writeInFile(String Value, String localUploadPath) {
+		String uuid =  UUID.randomUUID().toString();
+		String path= localUploadPath+ uuid+fileSuffix()+".json";
+		logger.info("Stored Path:: "+path);
+		try {
+			Files.write(Paths.get(path), Value.getBytes());
+		} catch (Exception e) {
+			logger.error("File can't Write:"+e);
+		}
+		return path;
 	}
 
 }

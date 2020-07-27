@@ -15,6 +15,11 @@ public class MainJson {
 		this.response = response;
 	}
 
+	@Override
+	public String toString() {
+		return "MainJson [response=" + response + "]";
+	}
+
 	
 
 }
