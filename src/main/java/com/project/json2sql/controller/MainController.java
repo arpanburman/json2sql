@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.MainJson;
+import com.project.json2sql.model.OwnerDetails;
 import com.project.json2sql.service.ProcessService;
 
 @RestController
@@ -33,6 +35,20 @@ public class MainController {
 				return ResponseEntity.status(HttpStatus.OK).body("{'status':'Success'}");
 			else
 				return ResponseEntity.status(HttpStatus.OK).body("{'status':'Failure'}");
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{'status':'Failure'}");
+		}
+	}
+	
+	@PostMapping("/getProxyData")
+	@ResponseBody
+	public ResponseEntity<?> getProxyData(@RequestBody InputProxyDto inputObj) {
+		logger.info("Process Start");
+		OwnerDetails ownerDetailsObj = new OwnerDetails();
+		try {
+			ownerDetailsObj = processService.startProxyProcess(inputObj);
+			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{'status':'Failure'}");

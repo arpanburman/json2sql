@@ -14,18 +14,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.MainJson;
 import com.project.json2sql.dto.PagesDto;
 import com.project.json2sql.dto.PropertyDto;
+import com.project.json2sql.dto.Root;
 import com.project.json2sql.dto.SummaryDto;
+import com.project.json2sql.model.ConfigProperties;
+import com.project.json2sql.model.OwnerDetails;
 import com.project.json2sql.model.ProcessJson;
 import com.project.json2sql.model.Properties;
 import com.project.json2sql.model.Summary;
+import com.project.json2sql.repository.ConfigPropertiesRepository;
+import com.project.json2sql.repository.OwnerDetailsRepository;
 import com.project.json2sql.repository.ProcessRepository;
 import com.project.json2sql.repository.PropertiesRepository;
 import com.project.json2sql.repository.SummaryRepository;
 import com.project.json2sql.service.ProcessService;
 import com.project.json2sql.util.DateUtil;
+import com.project.json2sql.util.ProxyCall;
 
 @Service
 public class ProcessServiceImpl implements ProcessService{
@@ -41,6 +48,12 @@ public class ProcessServiceImpl implements ProcessService{
 	
 	@Autowired
 	PropertiesRepository propertiesRepository;
+
+	@Autowired
+	ConfigPropertiesRepository configPropertiesRepository;
+	
+	@Autowired
+	OwnerDetailsRepository ownerDetailsRepository;
 	
 	public static final Logger logger = LoggerFactory.getLogger(ProcessServiceImpl.class);
 
@@ -168,6 +181,33 @@ public class ProcessServiceImpl implements ProcessService{
 			logger.error("File can't Write:"+e);
 		}
 		return path;
+	}
+
+
+
+	@Override
+	public OwnerDetails startProxyProcess(InputProxyDto inputObj) {
+		OwnerDetails ownerDetailsObj = new OwnerDetails();
+		ConfigProperties configPropertiesObj = configPropertiesRepository.fetchById(1);
+		try {
+			if(null != configPropertiesObj) {
+				Root rootObj = ProxyCall.callProxy(configPropertiesObj, inputObj);
+				
+				if(rootObj != null) {
+					ownerDetailsObj.setFirstName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
+					ownerDetailsObj.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
+					ownerDetailsObj.setOwnerAddress(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
+					ownerDetailsObj.setOwnerName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
+					ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
+					ownerDetailsObj.setId(inputObj.getId().toString());
+					ownerDetailsRepository.save(ownerDetailsObj);
+				}
+			}
+			
+		} catch (Exception e) {
+			logger.error("Error in Proxy Service"+e);
+		}
+		return ownerDetailsObj;
 	}
 
 }
