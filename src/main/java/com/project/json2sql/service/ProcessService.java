@@ -1,8 +1,11 @@
 package com.project.json2sql.service;
 
+import java.util.List;
+
 import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.MainJson;
 import com.project.json2sql.model.OwnerDetails;
+import com.project.json2sql.model.Properties;
 
 
 public interface ProcessService {
@@ -10,5 +13,11 @@ public interface ProcessService {
 	String startProcess(MainJson jsonObj);
 
 	OwnerDetails startProxyProcess(InputProxyDto inputObj);
+
+	List<Properties> fetchProperties();
+
+	List<Properties> getPropertiesById(String id);
+
+	int getPropertiesCount();
 
 }

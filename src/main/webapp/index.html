@@ -1,0 +1,304 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>
+            Json 2 sql Converts Data
+        </title>
+        <!-- Load AngularJS -->
+        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+        <script type="text/javascript">
+            var app = angular.module("UserManagement", []);
+         
+            //Controller Part
+            app.controller("UserManagementController", function($scope, $http) {
+         
+                //Initialize page with default data which is blank in this example
+                $scope.employees = [];
+                $scope.form = {
+                    id : ""
+                };
+         
+                //Now load the data from server
+                _refreshPageData();_countData();
+         
+                $scope.submitID = function() {
+                    
+                    var method = "";
+                    var url = "";
+                    if ($scope.form.id == null) {
+                        //Id is absent so add employee - POST operation
+                        method = "GET";
+                        url = 'json2sql/getProperties';
+                    } else {
+                        //If Id is present, it's edit operation - PUT operation
+                        method = "GET";
+                        url = 'json2sql/getPropertiesById/' + $scope.form.id;
+                    }
+         
+                    $http({
+                        method : method,
+                        url : url,
+                        data : angular.toJson($scope.form),
+                        headers : {
+                            'Content-Type' : 'application/json'
+                        }
+                    }).then(function successCallback(response) {
+                        $scope.employees = response.data;
+                    }, function errorCallback(response) {
+                        console.log(response.statusText);
+                    });
+                };
+                
+                /* Private Methods */
+                //HTTP GET- get all employees collection
+                function _refreshPageData() {
+                    $http({
+                        method : 'GET',
+                        url : 'json2sql/getProperties'
+                    }).then(function successCallback(response) {
+                        $scope.employees = response.data;
+                    }, function errorCallback(response) {
+                        console.log(response.statusText);
+                    });
+                }
+                function _countData() {
+                    $http({
+                        method : 'GET',
+                        url : 'json2sql/getPropertiesCount'
+                    }).then(function successCallback(response) {
+                        $scope.count = response.data;
+                    }, function errorCallback(response) {
+                        console.log(response.statusText);
+                    });
+                }
+                $scope.reset = function() {
+                	_refreshPageData();
+                	_countData();
+                    _clearForm();
+                }
+                        
+                //Clear the form
+                function _clearForm() {
+                    $scope.form.id = "";
+                    $scope.search="";
+                };
+                
+                $scope.uploadFile = function() {
+                	//var f = document.getElementById('file').files[0];
+                	//$scope.files = document.getElementById('file').files;
+                	console.log(document.getElementById('file').files.length);
+                	for (var i = 0; i < document.getElementById('file').files.length; i++){
+                		var f = document.getElementById('file').files[i];
+	                	$http({
+	                        url: 'json2sql/uploadFile',
+	                        method: "POST",
+	                        headers: { 'Content-Type': undefined },
+	                        transformRequest: function (data) {
+	                            var formData = new FormData();
+	                            //formData.append("model", angular.toJson(data.model));
+	                            formData.append("file", f);
+	                            return formData;
+	                        },
+	                        data: { files: file }
+	                    }).then(function (response) {
+	                    	alert(response.data);
+	                    	console.log(response.data);
+	                    });
+                	}
+                	_refreshPageData();
+                	_clearForm();
+                }
+                
+            });
+        </script>
+        <style>
+            .button {
+                cursor: pointer;
+                color: blue;
+            }
+            tr:nth-of-type(odd) { 
+			  background: #eee; 
+			}
+			th { 
+			  background: #1bbfc7a6; 
+			  color: white; 
+			  font-weight: bold; 
+			}
+            td,th{
+                border: 1px solid #ccc;
+                width: 25%;
+                text-align: left;
+            }
+            table {
+                width: 600px;
+                border-collapse: collapse; 
+            }
+            h1 {
+		        text-align: center;
+		      }
+        </style>
+    <head>
+    <body ng-app="UserManagement" ng-controller="UserManagementController">
+         <h1>
+            JSON 2 SQL Convert Data
+        </h1>
+        <hr>
+        
+        <h3>Upload File</h3>
+        <form id='uploadForm'>
+    		<input type="file" id="file" name="file" multiple="multiple" ng-model="form.upload"/>
+			<button ng-click="uploadFile();this.form.reset()">Upload</button>
+			<button onClick="this.form.reset()">Clear Files</button>
+		</form>
+		
+        <br><br>
+        <h3>Search Record</h3>
+        <form ng-submit="submitID()">
+            <table>
+                <tr>
+                    <h4>Search With ID:</h4>
+                    <input type="text" ng-model="form.id" size="40" placeholder="Enter a ID:"/>&nbsp;
+                    <input type="submit" value="Submit" />&nbsp;<button class="btn btn-primary btn-large center" type="reset" ng-click="reset()">Reset</button>
+                </tr>
+            </table>
+        </form>
+       <br><br>
+       <h3>Total Records : {{count}}</h3>
+		<form class="form-inline">
+			<div class="form-group">
+				<label>Search</label> <input type="text" ng-model="search"
+					class="form-control" placeholder="Search All">
+				<button class="btn btn-primary btn-large center" type="reset" ng-click="reset()">Reset</button>
+			</div>
+		</form>
+		<br>
+		<table>
+            <tr>
+                <th>Id</th>
+                <th>Type</th>
+                <th>Lon</th>
+                <th>Unit Number</th>
+                <th>Street Number</th>
+                <th>Street Name</th>
+                <th>Street Type</th>
+                <th>Street Direction</th>
+                <th>Address</th>
+                <th>Suburb</th>
+                <th>Postcode</th>
+                <th>State</th>
+                <th>Bathrooms</th>
+                <th>Bedrooms</th>
+                <th>Parking</th>
+                <th>Land Size</th>
+                <th>Sale Price</th>
+                <th>Sale Date</th>
+                <th>On The Market</th>
+                <th>Listing Date</th>
+                <th>Listing Price</th>
+                <th>Listing Description</th>
+                <th>Listed Type</th>
+                <th>auction Date</th>
+                <th>auction Time</th>
+                <th>rental Listing Date</th>
+                <th>REA Id</th>
+                <th>Rental Listing Period</th>
+                <th>Rental Listing Price</th>
+                <th>Agent Name</th>
+                <th>Recent Sales</th>
+                <th>Photo</th>
+                <th>Ucv</th>
+                <th>Ucv Date</th>
+                <th>Real Property Descriptor</th>
+                <th>Lga Name</th>
+                <th>Last Sale Type</th>
+                <th>Lot Plan</th>
+                <th>Zoning</th>
+                <th>Is Agent Advised</th>
+                <th>Land Use Primary</th>
+                <th>Current Rental Price</th>
+                <th>For Rent</th>
+                <th>For Rent Days On Market</th>
+                <th>For Rent Agency Name</th>
+                <th>Occupancy Type</th>
+                <th>Volume</th>
+                <th>Folio</th>
+                <th>Title Prefix</th>
+                <th>Title Suffix</th>
+                <th>Map Reference</th>
+                <th>Block</th>
+                <th>Section</th>
+                <th>Parcel List</th>
+                <th>Development Zone</th>
+                <th>Is Price With held</th>
+                <th>process_id</th>
+            </tr>
+ 
+            <tr ng-repeat="employee in employees | filter:search">
+                <td>{{ employee.id }}</td>
+                <td>{{ employee.type }}</td>
+                <td>{{ employee.lon }}</td>
+                <td>{{ employee.unitNumber}}</td>
+                <td>{{ employee.streetNumber}}</td>
+                <td>{{ employee.streetName}}</td>
+                <td>{{ employee.streetType}}</td>
+                <td>{{ employee.streetDirection}}</td>
+                <td>{{ employee.address}}</td>
+                <td>{{ employee.suburb}}</td>
+                <td>{{ employee.postcode}}</td>
+                <td>{{ employee.state}}</td>
+                <td>{{ employee.bathrooms}}</td>
+                <td>{{ employee.bedrooms}}</td>
+                <td>{{ employee.parking}}</td>
+                <td>{{ employee.landSize}}</td>
+                <td>{{ employee.salePrice}}</td>
+                <td>{{ employee.saleDate}}</td>
+                <td>{{ employee.onTheMarket}}</td>
+                <td>{{ employee.listingDate}}</td>
+                <td>{{ employee.listingPrice}}</td>
+                <td>{{ employee.listingDescription}}</td>
+                <td>{{ employee.listedType}}</td>
+                <td>{{ employee.auctionDate}}</td>
+                <td>{{ employee.auctionTime}}</td>
+                <td>{{ employee.rentalListingDate}}</td>
+                <td>{{ employee.REAId}}</td>
+                <td>{{ employee.rentalListingPeriod}}</td>
+                <td>{{ employee.rentalListingPrice}}</td>
+                <td>{{ employee.agentName}}</td>
+                <td>{{ employee.recentSales}}</td>
+                <td>{{ employee.photo}}</td>
+                <td>{{ employee.ucv}}</td>
+                <td>{{ employee.ucvDate}}</td>
+                <td>{{ employee.realPropertyDescriptor}}</td>
+                <td>{{ employee.lgaName}}</td>
+                <td>{{ employee.lastSaleType}}</td>
+                <td>{{ employee.lotPlan}}</td>
+                <td>{{ employee.zoning}}</td>
+                <td>{{ employee.isAgentAdvised}}</td>
+                <td>{{ employee.landUsePrimary}}</td>
+                <td>{{ employee.currentRentalPrice}}</td>
+                <td>{{ employee.forRent}}</td>
+                <td>{{ employee.forRentDaysOnMarket}}</td>
+                <td>{{ employee.forRentAgencyName}}</td>
+                <td>{{ employee.occupancyType}}</td>
+                <td>{{ employee.volume}}</td>
+                <td>{{ employee.folio}}</td>
+                <td>{{ employee.titlePrefix}}</td>
+                <td>{{ employee.titleSuffix}}</td>
+                <td>{{ employee.mapReference}}</td>
+                <td>{{ employee.block}}</td>
+                <td>{{ employee.section}}</td>
+                <td>{{ employee.parcelList}}</td>
+                <td>{{ employee.developmentZone}}</td>
+                <td>{{ employee.isPriceWithheld}}</td>
+                <td>{{ employee.process_id}}</td>
+                
+                <!-- <td><a ng-click="editEmployee( employee )" class="button">Edit</a> | <a ng-click="removeEmployee( employee )" class="button">Remove</a></td>-->
+            </tr>
+ 			
+        </table>
+<!--
+       
+ -->
+    </body>
+</html>

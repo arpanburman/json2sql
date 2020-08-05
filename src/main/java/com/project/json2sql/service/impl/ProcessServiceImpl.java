@@ -90,70 +90,76 @@ public class ProcessServiceImpl implements ProcessService{
 				List<Properties> PropertiesListObj = new ArrayList<Properties>();
 				logger.info("Property Count ::"+propertyDtoListObj.size());
 				for(PropertyDto propertyDtoObj : propertyDtoListObj) {
-					Properties propertiesObj = new Properties();
-					propertiesObj.setType(propertyDtoObj.getType());
-					propertiesObj.setId(propertyDtoObj.getId().toString());
-					propertiesObj.setLat(propertyDtoObj.getLat().toString());
-					propertiesObj.setLon(propertyDtoObj.getLon().toString());
-					propertiesObj.setUnitNumber(propertyDtoObj.getUnitNumber());
-					propertiesObj.setStreetNumber(propertyDtoObj.getStreetNumber());
-					propertiesObj.setStreetName(propertyDtoObj.getStreetName());
-					propertiesObj.setStreetType(propertyDtoObj.getStreetType());
-					propertiesObj.setStreetDirection(propertyDtoObj.getStreetDirection());
-					propertiesObj.setAddress(propertyDtoObj.getAddress());
-					propertiesObj.setSuburb(propertyDtoObj.getSuburb());
-					propertiesObj.setPostcode(propertyDtoObj.getPostcode());
-					propertiesObj.setState(propertyDtoObj.getState());
-					propertiesObj.setBathrooms(propertyDtoObj.getBathrooms().toString());
-					propertiesObj.setBedrooms(propertyDtoObj.getBedrooms().toString());
-					propertiesObj.setParking(propertyDtoObj.getParking().toString());
-					propertiesObj.setLandSize(propertyDtoObj.getLandSize().toString());
-					propertiesObj.setSalePrice(propertyDtoObj.getSalePrice().toString());
-					propertiesObj.setSaleDate(propertyDtoObj.getSaleDate());
-					propertiesObj.setOnTheMarket(propertyDtoObj.getOnTheMarket().toString());
-					propertiesObj.setListingDate(propertyDtoObj.getListingDate());
-					propertiesObj.setListingPrice(propertyDtoObj.getListingPrice());
-					propertiesObj.setListingDescription(propertyDtoObj.getListingDescription());
-					propertiesObj.setListedType(propertyDtoObj.getListedType());
-					propertiesObj.setAuctionDate(propertyDtoObj.getAuctionDate());
-					propertiesObj.setAuctionTime(propertyDtoObj.getAuctionTime());
-					propertiesObj.setRentalListingDate(propertyDtoObj.getRentalListingDate());
-					propertiesObj.setRentalListingPeriod(propertyDtoObj.getRentalListingPeriod());
-					propertiesObj.setRentalListingPrice(propertyDtoObj.getRentalListingPrice());
-					propertiesObj.setREAId(propertyDtoObj.getREAId());
-					propertiesObj.setAgentName(propertyDtoObj.getAgentName());
-					propertiesObj.setRecentSales(propertyDtoObj.getRecentSales().toString());
-					propertiesObj.setPhoto(propertyDtoObj.getPhoto());
-					propertiesObj.setUcv(propertyDtoObj.getUcv().toString());
-					propertiesObj.setUcvDate(propertyDtoObj.getUcvDate());
-					propertiesObj.setRealPropertyDescriptor(propertyDtoObj.getRealPropertyDescriptor());
-					propertiesObj.setLgaName(propertyDtoObj.getLgaName());
-					propertiesObj.setLastSaleType(propertyDtoObj.getLastSaleType());
-					propertiesObj.setLotPlan(propertyDtoObj.getLotPlan());
-					propertiesObj.setZoning(propertyDtoObj.getZoning());
-					propertiesObj.setIsAgentAdvised(propertyDtoObj.getIsAgentAdvised().toString());
-					propertiesObj.setLandUsePrimary(propertyDtoObj.getLandUsePrimary());
-					propertiesObj.setCurrentRentalPrice(propertyDtoObj.getCurrentRentalPrice());
-					propertiesObj.setForRent(propertyDtoObj.getForRent().toString());
-					propertiesObj.setForRentAgencyName(propertyDtoObj.getForRentAgencyName());
-					propertiesObj.setForRentDaysOnMarket(propertyDtoObj.getForRentDaysOnMarket().toString());
-					propertiesObj.setOccupancyType(propertyDtoObj.getOccupancyType());
-					propertiesObj.setVolume(propertyDtoObj.getVolume());
-					propertiesObj.setFolio(propertyDtoObj.getFolio());
-					propertiesObj.setTitlePrefix(propertyDtoObj.getTitlePrefix());
-					propertiesObj.setTitleSuffix(propertyDtoObj.getTitleSuffix());
-					propertiesObj.setMapReference(propertyDtoObj.getMapReference());
-					propertiesObj.setBlock(propertyDtoObj.getBlock());
-					propertiesObj.setSection(propertyDtoObj.getSection());
-					propertiesObj.setDevelopmentZone(propertyDtoObj.getDevelopmentZone());
-					propertiesObj.setIsPriceWithheld(propertyDtoObj.getIsPriceWithheld());
-					propertiesObj.setCreatedDate(DateUtil.getCurrentDateTime());
-					propertiesObj.setCreatedBy("System");
-					propertiesObj.setProcessId(processJson.getProcessId());
-					
-					propertiesObj = propertiesRepository.save(propertiesObj);
-					
-					PropertiesListObj.add(propertiesObj);
+					//Check properties already available or not
+					List<Properties> propObj = getPropertiesById(propertyDtoObj.getId().toString());
+					if(propObj.size()>0) {
+						logger.info("Property already available, no update required");
+					}else {
+						Properties propertiesObj = new Properties();
+						propertiesObj.setType(propertyDtoObj.getType());
+						propertiesObj.setId(propertyDtoObj.getId().toString());
+						propertiesObj.setLat(propertyDtoObj.getLat().toString());
+						propertiesObj.setLon(propertyDtoObj.getLon().toString());
+						propertiesObj.setUnitNumber(propertyDtoObj.getUnitNumber());
+						propertiesObj.setStreetNumber(propertyDtoObj.getStreetNumber());
+						propertiesObj.setStreetName(propertyDtoObj.getStreetName());
+						propertiesObj.setStreetType(propertyDtoObj.getStreetType());
+						propertiesObj.setStreetDirection(propertyDtoObj.getStreetDirection());
+						propertiesObj.setAddress(propertyDtoObj.getAddress());
+						propertiesObj.setSuburb(propertyDtoObj.getSuburb());
+						propertiesObj.setPostcode(propertyDtoObj.getPostcode());
+						propertiesObj.setState(propertyDtoObj.getState());
+						propertiesObj.setBathrooms(propertyDtoObj.getBathrooms().toString());
+						propertiesObj.setBedrooms(propertyDtoObj.getBedrooms().toString());
+						propertiesObj.setParking(propertyDtoObj.getParking().toString());
+						propertiesObj.setLandSize(propertyDtoObj.getLandSize().toString());
+						propertiesObj.setSalePrice(propertyDtoObj.getSalePrice().toString());
+						propertiesObj.setSaleDate(propertyDtoObj.getSaleDate());
+						propertiesObj.setOnTheMarket(propertyDtoObj.getOnTheMarket().toString());
+						propertiesObj.setListingDate(propertyDtoObj.getListingDate());
+						propertiesObj.setListingPrice(propertyDtoObj.getListingPrice());
+						propertiesObj.setListingDescription(propertyDtoObj.getListingDescription());
+						propertiesObj.setListedType(propertyDtoObj.getListedType());
+						propertiesObj.setAuctionDate(propertyDtoObj.getAuctionDate());
+						propertiesObj.setAuctionTime(propertyDtoObj.getAuctionTime());
+						propertiesObj.setRentalListingDate(propertyDtoObj.getRentalListingDate());
+						propertiesObj.setRentalListingPeriod(propertyDtoObj.getRentalListingPeriod());
+						propertiesObj.setRentalListingPrice(propertyDtoObj.getRentalListingPrice());
+						propertiesObj.setREAId(propertyDtoObj.getREAId());
+						propertiesObj.setAgentName(propertyDtoObj.getAgentName());
+						propertiesObj.setRecentSales(propertyDtoObj.getRecentSales().toString());
+						propertiesObj.setPhoto(propertyDtoObj.getPhoto());
+						propertiesObj.setUcv(propertyDtoObj.getUcv().toString());
+						propertiesObj.setUcvDate(propertyDtoObj.getUcvDate());
+						propertiesObj.setRealPropertyDescriptor(propertyDtoObj.getRealPropertyDescriptor());
+						propertiesObj.setLgaName(propertyDtoObj.getLgaName());
+						propertiesObj.setLastSaleType(propertyDtoObj.getLastSaleType());
+						propertiesObj.setLotPlan(propertyDtoObj.getLotPlan());
+						propertiesObj.setZoning(propertyDtoObj.getZoning());
+						propertiesObj.setIsAgentAdvised(propertyDtoObj.getIsAgentAdvised().toString());
+						propertiesObj.setLandUsePrimary(propertyDtoObj.getLandUsePrimary());
+						propertiesObj.setCurrentRentalPrice(propertyDtoObj.getCurrentRentalPrice());
+						propertiesObj.setForRent(propertyDtoObj.getForRent().toString());
+						propertiesObj.setForRentAgencyName(propertyDtoObj.getForRentAgencyName());
+						propertiesObj.setForRentDaysOnMarket(propertyDtoObj.getForRentDaysOnMarket().toString());
+						propertiesObj.setOccupancyType(propertyDtoObj.getOccupancyType());
+						propertiesObj.setVolume(propertyDtoObj.getVolume());
+						propertiesObj.setFolio(propertyDtoObj.getFolio());
+						propertiesObj.setTitlePrefix(propertyDtoObj.getTitlePrefix());
+						propertiesObj.setTitleSuffix(propertyDtoObj.getTitleSuffix());
+						propertiesObj.setMapReference(propertyDtoObj.getMapReference());
+						propertiesObj.setBlock(propertyDtoObj.getBlock());
+						propertiesObj.setSection(propertyDtoObj.getSection());
+						propertiesObj.setDevelopmentZone(propertyDtoObj.getDevelopmentZone());
+						propertiesObj.setIsPriceWithheld(propertyDtoObj.getIsPriceWithheld());
+						propertiesObj.setCreatedDate(DateUtil.getCurrentDateTime());
+						propertiesObj.setCreatedBy("System");
+						propertiesObj.setProcessId(processJson.getProcessId());
+						
+						propertiesObj = propertiesRepository.save(propertiesObj);
+						
+						PropertiesListObj.add(propertiesObj);
+					}
 				}
 				isProcess = "Y";
 			}
@@ -208,6 +214,38 @@ public class ProcessServiceImpl implements ProcessService{
 			logger.error("Error in Proxy Service"+e);
 		}
 		return ownerDetailsObj;
+	}
+
+
+
+	@Override
+	public List<Properties> fetchProperties() {
+		List<Properties> propObj = new ArrayList<>();
+		try {
+			propObj = (List<Properties>) propertiesRepository.findAll();
+		} catch (Exception e) {
+			logger.error("Error in Property Fetch Service"+e);
+		}
+		return propObj;
+	}
+	
+	@Override
+	public List<Properties> getPropertiesById(String id) {
+		List<Properties> propObj = new ArrayList<>();
+		try {
+			propObj = (List<Properties>) propertiesRepository.fetchById(id);
+		} catch (Exception e) {
+			logger.error("Error in Property Upload Service"+e);
+		}
+		return propObj;
+	}
+
+
+
+	@Override
+	public int getPropertiesCount() {
+		int count = propertiesRepository.getPropertiesCount();
+		return count;
 	}
 
 }
