@@ -2,6 +2,7 @@ package com.project.json2sql.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -16,5 +17,12 @@ public interface PropertiesRepository extends CrudRepository<Properties, Long>{
 
 	@Query("select count(*) from #{#entityName} g")
 	int getPropertiesCount();
+
+	Object findAll(Pageable pageable);
+
+	//@Query("select g from #{#entityName} g ORDER BY g.id LIMIT 100 OFFSET =:offset")
+	//List<Properties> getPropertiesPager(String offset);
+	
+	
 
 }

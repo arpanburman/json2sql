@@ -9,6 +9,7 @@ import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +40,9 @@ import io.swagger.annotations.ApiResponses;
 @Api(value="json2sql", description="Operations pertaining to JSON in SQL")
 public class MainController {
 	
+	@Value("${pageLimit}")
+    private int pageLimit;
+	
 	public static final Logger logger = LoggerFactory.getLogger(MainController.class);
 	
 	@Autowired
@@ -61,12 +65,12 @@ public class MainController {
 		try {
 			isProcess = processService.startProcess(jsonObj);
 			if(isProcess == "Y")
-				return ResponseEntity.status(HttpStatus.OK).body("{'status':'Success'}");
+				return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\"Success\"}");
 			else
-				return ResponseEntity.status(HttpStatus.OK).body("{'status':'Failure'}");
+				return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\"Failure\"}");
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{'status':'Failure'}");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
 	
@@ -79,7 +83,20 @@ public class MainController {
 			return ResponseEntity.status(HttpStatus.OK).body(propertiesObj);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{'status':'Failure'}");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/getPropertiesPager/{offset}")
+	@ResponseBody
+	public ResponseEntity<?> getPropertiesPager(@PathVariable String offset) {
+		List<Properties> propertiesObj = new ArrayList<Properties>();
+		try {
+			propertiesObj = processService.getPropertiesPager(offset);
+			return ResponseEntity.status(HttpStatus.OK).body(propertiesObj);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
 	
@@ -92,7 +109,7 @@ public class MainController {
 			return ResponseEntity.status(HttpStatus.OK).body(propertiesObj);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{'status':'Failure'}");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
 	
@@ -105,7 +122,7 @@ public class MainController {
 			return ResponseEntity.status(HttpStatus.OK).body(count);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{'status':'Failure'}");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
 	
@@ -122,12 +139,12 @@ public class MainController {
 				isProcess = processService.startProcess(jsonObj);
 			}
 			if(isProcess == "Y")
-				return ResponseEntity.status(HttpStatus.OK).body("Successfully uploaded");
+				return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\"Success\"}");
 			else
-				return ResponseEntity.status(HttpStatus.OK).body("Failure during upload");
+				return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\"Failure\"}");
 		} catch (Exception ex) {
 			logger.error("Error Occured while File Uplaod");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failure");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
 	
@@ -149,7 +166,20 @@ public class MainController {
 			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{'status':'Failure'}");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/getPropertiesByLimit/{offset}")
+	@ResponseBody
+	public ResponseEntity<?> getPropertiesByLimit(@PathVariable int offset) {
+		List<Properties> propertiesObj = new ArrayList<Properties>();
+		try {
+			propertiesObj = processService.getAllProperties(pageLimit, offset);
+			return ResponseEntity.status(HttpStatus.OK).body(propertiesObj);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
 	

@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.project.json2sql.dto.InputProxyDto;
@@ -21,6 +22,7 @@ import com.project.json2sql.dto.PropertyDto;
 import com.project.json2sql.dto.Root;
 import com.project.json2sql.dto.SummaryDto;
 import com.project.json2sql.model.ConfigProperties;
+import com.project.json2sql.model.OffsetBasedPageRequest;
 import com.project.json2sql.model.OwnerDetails;
 import com.project.json2sql.model.ProcessJson;
 import com.project.json2sql.model.Properties;
@@ -28,6 +30,7 @@ import com.project.json2sql.model.Summary;
 import com.project.json2sql.repository.ConfigPropertiesRepository;
 import com.project.json2sql.repository.OwnerDetailsRepository;
 import com.project.json2sql.repository.ProcessRepository;
+import com.project.json2sql.repository.PropertiesJpaRepository;
 import com.project.json2sql.repository.PropertiesRepository;
 import com.project.json2sql.repository.SummaryRepository;
 import com.project.json2sql.service.ProcessService;
@@ -54,6 +57,9 @@ public class ProcessServiceImpl implements ProcessService{
 	
 	@Autowired
 	OwnerDetailsRepository ownerDetailsRepository;
+	
+	@Autowired
+	PropertiesJpaRepository propertiesJpaRepository;
 	
 	public static final Logger logger = LoggerFactory.getLogger(ProcessServiceImpl.class);
 
@@ -246,6 +252,60 @@ public class ProcessServiceImpl implements ProcessService{
 	public int getPropertiesCount() {
 		int count = propertiesRepository.getPropertiesCount();
 		return count;
+	}
+
+
+
+	@Override
+	public List<Properties> getPropertiesPager(String offset) {
+		List<Properties> propObj = new ArrayList<>();
+		try {
+			//propObj = (List<Properties>) propertiesRepository.getPropertiesPager(offset);
+		} catch (Exception e) {
+			logger.error("Error in Property Fetch Service"+e);
+		}
+		return propObj;
+	}
+	
+	@Override
+    public List<Properties> getAllProperties(int limit, int offset) {
+		List<Properties> propObj = new ArrayList<>();
+		try {
+        logger.info("Get all Employees with limit {} and offset {}", limit, offset);
+        Pageable pageable = new OffsetBasedPageRequest(limit, offset);
+        propObj = propertiesJpaRepository.findAll(pageable).getContent();
+		} catch (Exception e) {
+			logger.error("Error in Property Fetch Service"+e);
+		}
+		
+		return propObj;
+    }
+
+
+
+	@Override
+	public ConfigProperties fetchConfigProp() {
+		ConfigProperties cofigObj = new ConfigProperties();
+		try {
+			cofigObj = configPropertiesRepository.fetchById(1);
+		} catch (Exception e) {
+			logger.error("Error in Config prop Fetch Service"+e);
+		}
+		return cofigObj;
+	}
+
+
+
+	@Override
+	public ConfigProperties setConfigDetails(ConfigProperties configObj) {
+		ConfigProperties cofigPropObj = new ConfigProperties();
+		try {
+			cofigPropObj.setId(1);
+			cofigPropObj = configPropertiesRepository.save(configObj);
+		} catch (Exception e) {
+			logger.error("Error in Config prop Save Service"+e);
+		}
+		return cofigPropObj;
 	}
 
 }

@@ -1,0 +1,374 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Json 2 sql Converts Data</title>
+<!-- Load AngularJS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script
+	src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script type="text/javascript">
+	var app = angular.module("UserManagement", []);
+
+	//Controller Part
+	app.controller("UserManagementController", function($scope, $http) {
+		$scope.offset = 50;
+		//Initialize page with default data which is blank in this example
+		$scope.employees = [];
+		$scope.form = {
+			id : ""
+		};
+
+		//Now load the data from server
+		_refreshPageData();
+		_countData();
+
+		$scope.submitID = function() {
+
+			var method = "";
+			var url = "";
+			if ($scope.form.id == null) {
+				//Id is absent so add employee - POST operation
+				method = "GET";
+				url = 'json2sql/getProperties';
+			} else {
+				//If Id is present, it's edit operation - PUT operation
+				method = "GET";
+				url = 'json2sql/getPropertiesById/' + $scope.form.id;
+			}
+
+			$http({
+				method : method,
+				url : url,
+				data : angular.toJson($scope.form),
+				headers : {
+					'Content-Type' : 'application/json'
+				}
+			}).then(function successCallback(response) {
+				$scope.employees = response.data;
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		};
+
+		/* Private Methods */
+		//HTTP GET- get all employees collection
+		function _refreshPageData() {
+			$http({
+				method : 'GET',
+				url : 'json2sql/getPropertiesByLimit/' + $scope.offset
+			}).then(function successCallback(response) {
+				$scope.employees = response.data;
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		function _countData() {
+			$http({
+				method : 'GET',
+				url : 'json2sql/getPropertiesCount'
+			}).then(function successCallback(response) {
+				$scope.count = response.data;
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		$scope.reset = function() {
+			_refreshPageData();
+			_countData();
+			_clearForm();
+		}
+		$scope.nextOffset = function() {
+			if ($scope.offset <= $scope.count) {
+				$scope.offset = $scope.offset + 50;
+				_refreshPageData();
+			}
+		}
+		$scope.prevOffset = function() {
+			if ($scope.offset >= 0) {
+				$scope.offset = $scope.offset - 50;
+				_refreshPageData();
+			}
+		}
+
+		//Clear the form
+		function _clearForm() {
+			$scope.form.id = "";
+			$scope.search = "";
+		}
+		;
+
+	});
+</script>
+<style>
+.button {
+	cursor: pointer;
+	color: blue;
+}
+
+tr:nth-of-type(odd) {
+	background: #eee;
+}
+
+th {
+	background: #286090;
+	color: white;
+	font-weight: bold;
+}
+
+td, th {
+	border: 1px solid #ccc;
+	width: 25%;
+	text-align: left;
+}
+
+table {
+	width: 600px;
+	border-collapse: collapse;
+}
+
+h1 {
+	text-align: center;
+}
+
+footer {
+	background-color: #555;
+	color: white;
+	padding: 15px;
+	width: 100%;
+	position: fixed;
+	left: 0;
+	bottom: 0;
+}
+
+.card {
+	margin: 0 auto; /* Added */
+	float: none; /* Added */
+	margin-bottom: 10px; /* Added */
+}
+
+@media screen and (max-width: 100%) {
+	.sidenav {
+		height: auto;
+		padding: 15px;
+	}
+	.row.content {
+		height: auto;
+	}
+}
+
+.navbar {
+	margin-bottom: 0;
+	border-radius: 0;
+}
+/* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+.row.content {
+	height: 450px
+}
+
+/* Set gray background color and 100% height */
+.sidenav {
+	padding-top: 20px;
+	background-color: #ffffff;
+	height: 20%;
+	left: 0;
+	bottom: 0;
+}
+</style>
+<head>
+<body ng-app="UserManagement" ng-controller="UserManagementController">
+	<nav class="navbar navbar-inverse">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse"
+					data-target="#myNavbar"></button>
+				<a class="navbar-brand" href="#">JSON to SQL Convert Data</a>
+			</div>
+			<div class="collapse navbar-collapse" id="myNavbar">
+				<ul class="nav navbar-nav">
+					<li><a href="index.html">Home</a></li>
+					<li class="active"><a href="propertyList.html">Property
+							List</a></li>
+					<li><a href="ownerList.html">Owner List</a></li>
+					<li><a href="configProxy.html">Configure Proxy</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<div class="container-fluid text-center">
+		<div class="row content">
+			<div class="col-sm-2 sidenav"></div>
+			<div class="col-sm-8 text-centre">
+				<div class="card text-primary border-primary ">
+					<div class="card-body text-center">
+						<h3>Search Record</h3>
+						<form ng-submit="submitID()" class="form-inline">
+							<div class="form-group">
+								<label>Search With ID:</label> <input type="text"
+									ng-model="form.id" placeholder="Enter a ID:"
+									class="form-control" />&nbsp; <input type="submit"
+									value="Submit" class="btn btn-primary btn-large center" />&nbsp;
+								<button class="btn btn-primary btn-large center" type="reset"
+									ng-click="reset()">Reset</button>
+							</div>
+						</form>
+					</div>
+				</div>
+				<h3>Total Records : {{count}}</h3>
+				<ul class="pager">
+					<li class="previous"><button type="button"
+							class="btn btn-primary" ng-click="prevOffset()">Previous</button></li>
+					<li class="next"><button type="button" class="btn btn-primary"
+							ng-click="nextOffset()">Next</button></li>
+				</ul>
+			</div>
+
+			<!-- <form class="form-inline">
+				<div class="form-group">
+					<label>Search</label> <input type="text" ng-model="search"
+						class="form-control" placeholder="Search All">
+					<button class="btn btn-primary btn-large center" type="reset"
+						ng-click="reset()">Reset</button>
+				</div>
+			</form>-->
+			<div class="col-sm-8 text-centre">
+				<table class="table table-striped">
+					<tr>
+						<th>Id</th>
+						<th>Type</th>
+						<th>Lon</th>
+						<th>Unit Number</th>
+						<th>Street Number</th>
+						<th>Street Name</th>
+						<th>Street Type</th>
+						<th>Street Direction</th>
+						<th>Address</th>
+						<th>Suburb</th>
+						<th>Postcode</th>
+						<th>State</th>
+						<th>Bathrooms</th>
+						<th>Bedrooms</th>
+						<th>Parking</th>
+						<th>Land Size</th>
+						<th>Sale Price</th>
+						<th>Sale Date</th>
+						<th>On The Market</th>
+						<th>Listing Date</th>
+						<th>Listing Price</th>
+						<th>Listing Description</th>
+						<th>Listed Type</th>
+						<th>auction Date</th>
+						<th>auction Time</th>
+						<th>rental Listing Date</th>
+						<th>REA Id</th>
+						<th>Rental Listing Period</th>
+						<th>Rental Listing Price</th>
+						<th>Agent Name</th>
+						<th>Recent Sales</th>
+						<th>Photo</th>
+						<th>Ucv</th>
+						<th>Ucv Date</th>
+						<th>Real Property Descriptor</th>
+						<th>Lga Name</th>
+						<th>Last Sale Type</th>
+						<th>Lot Plan</th>
+						<th>Zoning</th>
+						<th>Is Agent Advised</th>
+						<th>Land Use Primary</th>
+						<th>Current Rental Price</th>
+						<th>For Rent</th>
+						<th>For Rent Days On Market</th>
+						<th>For Rent Agency Name</th>
+						<th>Occupancy Type</th>
+						<th>Volume</th>
+						<th>Folio</th>
+						<th>Title Prefix</th>
+						<th>Title Suffix</th>
+						<th>Map Reference</th>
+						<th>Block</th>
+						<th>Section</th>
+						<th>Parcel List</th>
+						<th>Development Zone</th>
+						<th>Is Price With held</th>
+						<th>process_id</th>
+					</tr>
+
+					<tr ng-repeat="employee in employees | filter:search">
+						<td>{{ employee.id }}</td>
+						<td>{{ employee.type }}</td>
+						<td>{{ employee.lon }}</td>
+						<td>{{ employee.unitNumber}}</td>
+						<td>{{ employee.streetNumber}}</td>
+						<td>{{ employee.streetName}}</td>
+						<td>{{ employee.streetType}}</td>
+						<td>{{ employee.streetDirection}}</td>
+						<td>{{ employee.address}}</td>
+						<td>{{ employee.suburb}}</td>
+						<td>{{ employee.postcode}}</td>
+						<td>{{ employee.state}}</td>
+						<td>{{ employee.bathrooms}}</td>
+						<td>{{ employee.bedrooms}}</td>
+						<td>{{ employee.parking}}</td>
+						<td>{{ employee.landSize}}</td>
+						<td>{{ employee.salePrice}}</td>
+						<td>{{ employee.saleDate}}</td>
+						<td>{{ employee.onTheMarket}}</td>
+						<td>{{ employee.listingDate}}</td>
+						<td>{{ employee.listingPrice}}</td>
+						<td>{{ employee.listingDescription}}</td>
+						<td>{{ employee.listedType}}</td>
+						<td>{{ employee.auctionDate}}</td>
+						<td>{{ employee.auctionTime}}</td>
+						<td>{{ employee.rentalListingDate}}</td>
+						<td>{{ employee.REAId}}</td>
+						<td>{{ employee.rentalListingPeriod}}</td>
+						<td>{{ employee.rentalListingPrice}}</td>
+						<td>{{ employee.agentName}}</td>
+						<td>{{ employee.recentSales}}</td>
+						<td>{{ employee.photo}}</td>
+						<td>{{ employee.ucv}}</td>
+						<td>{{ employee.ucvDate}}</td>
+						<td>{{ employee.realPropertyDescriptor}}</td>
+						<td>{{ employee.lgaName}}</td>
+						<td>{{ employee.lastSaleType}}</td>
+						<td>{{ employee.lotPlan}}</td>
+						<td>{{ employee.zoning}}</td>
+						<td>{{ employee.isAgentAdvised}}</td>
+						<td>{{ employee.landUsePrimary}}</td>
+						<td>{{ employee.currentRentalPrice}}</td>
+						<td>{{ employee.forRent}}</td>
+						<td>{{ employee.forRentDaysOnMarket}}</td>
+						<td>{{ employee.forRentAgencyName}}</td>
+						<td>{{ employee.occupancyType}}</td>
+						<td>{{ employee.volume}}</td>
+						<td>{{ employee.folio}}</td>
+						<td>{{ employee.titlePrefix}}</td>
+						<td>{{ employee.titleSuffix}}</td>
+						<td>{{ employee.mapReference}}</td>
+						<td>{{ employee.block}}</td>
+						<td>{{ employee.section}}</td>
+						<td>{{ employee.parcelList}}</td>
+						<td>{{ employee.developmentZone}}</td>
+						<td>{{ employee.isPriceWithheld}}</td>
+						<td>{{ employee.process_id}}</td>
+
+						<!-- <td><a ng-click="editEmployee( employee )" class="button">Edit</a> | <a ng-click="removeEmployee( employee )" class="button">Remove</a></td>-->
+					</tr>
+
+				</table>
+			</div>
+		</div>
+	</div>
+	<footer class="container-fluid text-center">
+		<p>Copy Right Protected</p>
+	</footer>
+	<!--
+       
+ -->
+</body>
+</html>
