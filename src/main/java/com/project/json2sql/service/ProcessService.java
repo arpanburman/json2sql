@@ -6,6 +6,7 @@ import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.MainJson;
 import com.project.json2sql.model.ConfigProperties;
 import com.project.json2sql.model.OwnerDetails;
+import com.project.json2sql.model.ProcessScheduleJson;
 import com.project.json2sql.model.Properties;
 
 
@@ -28,5 +29,7 @@ public interface ProcessService {
 	ConfigProperties fetchConfigProp();
 
 	ConfigProperties setConfigDetails(ConfigProperties configObj);
+
+	List<ProcessScheduleJson> getAllFileList(int pageLimit, int offset);
 
 }

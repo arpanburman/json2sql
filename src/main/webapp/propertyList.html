@@ -17,7 +17,7 @@
 
 	//Controller Part
 	app.controller("UserManagementController", function($scope, $http) {
-		$scope.offset = 50;
+		$scope.offset = 0;
 		//Initialize page with default data which is blank in this example
 		$scope.employees = [];
 		$scope.form = {
@@ -196,6 +196,7 @@ footer {
 							List</a></li>
 					<li><a href="ownerList.html">Owner List</a></li>
 					<li><a href="configProxy.html">Configure Proxy</a></li>
+					<li><a href="SchedulerFile.html">Processed File List</a></li>
 				</ul>
 			</div>
 		</div>

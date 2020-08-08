@@ -5,12 +5,12 @@ import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-import com.project.json2sql.model.OwnerDetails;
+import com.project.json2sql.model.AuditOwnerDetails;
 
-public interface OwnerDetailsRepository extends CrudRepository<OwnerDetails, Long>{
+public interface AuditOwnerDetailsRepository extends CrudRepository<AuditOwnerDetails, Long>{
 	
 	@Query("select g from #{#entityName} g where g.id = :id")
-	List<OwnerDetails> fetchById(String id);
+	List<AuditOwnerDetails> fetchById(String id);
 
 	@Query("select count(*) from #{#entityName} g")
 	int getOwnerCount();

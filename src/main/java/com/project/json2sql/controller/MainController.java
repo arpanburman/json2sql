@@ -26,8 +26,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.MainJson;
 import com.project.json2sql.model.OwnerDetails;
+import com.project.json2sql.model.ProcessScheduleJson;
 import com.project.json2sql.model.Properties;
 import com.project.json2sql.service.ProcessService;
+import com.project.json2sql.service.SchedulerService;
+import com.project.json2sql.util.DateUtil;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -47,6 +50,9 @@ public class MainController {
 	
 	@Autowired
 	ProcessService processService;
+	
+	@Autowired
+	SchedulerService schedulerService;
 
 
 	@ApiOperation(value = "Store Properties from JSON to SQL")
@@ -148,27 +154,7 @@ public class MainController {
 		}
 	}
 	
-	@ApiOperation(value = "Store Proxy Data from JSON to SQL")
-	@ApiResponses(value = {
-	        @ApiResponse(code = 200, message = "Successfully Stored"),
-	        @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-	        @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-	        @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
-	}
-	)
-	@PostMapping("/getProxyDataStoreSql")
-	@ResponseBody
-	public ResponseEntity<?> getProxyData(@RequestBody InputProxyDto inputObj) {
-		logger.info("Process Start");
-		OwnerDetails ownerDetailsObj = new OwnerDetails();
-		try {
-			ownerDetailsObj = processService.startProxyProcess(inputObj);
-			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
-		} catch (Exception ex) {
-			logger.error("Error Occured while Fetch");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
-		}
-	}
+	
 	
 	@GetMapping("/getPropertiesByLimit/{offset}")
 	@ResponseBody
@@ -183,10 +169,23 @@ public class MainController {
 		}
 	}
 	
-	@GetMapping("/hello")
+	@GetMapping("/scheduleJson")
 	@ResponseBody
-	public String hello() {
-		logger.info("Process Start");
-		return "Hello World";
+	public void processJsonUploadJob() {
+		 System.out.println("Java cron job expression:: " + DateUtil.getCurrentDateTime());
+	     schedulerService.processJsonUploadJob();
+	}
+	
+	@GetMapping("/getScheduleFileByLimit/{offset}")
+	@ResponseBody
+	public ResponseEntity<?> getScheduleFileByLimit(@PathVariable int offset) {
+		List<ProcessScheduleJson> fileObjList = new ArrayList<ProcessScheduleJson>();
+		try {
+			fileObjList = processService.getAllFileList(10, offset);
+			return ResponseEntity.status(HttpStatus.OK).body(fileObjList);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
 	}
 }

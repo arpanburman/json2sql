@@ -21,17 +21,21 @@ import com.project.json2sql.dto.PagesDto;
 import com.project.json2sql.dto.PropertyDto;
 import com.project.json2sql.dto.Root;
 import com.project.json2sql.dto.SummaryDto;
+import com.project.json2sql.model.AuditOwnerDetails;
 import com.project.json2sql.model.ConfigProperties;
 import com.project.json2sql.model.OffsetBasedPageRequest;
 import com.project.json2sql.model.OwnerDetails;
 import com.project.json2sql.model.ProcessJson;
+import com.project.json2sql.model.ProcessScheduleJson;
 import com.project.json2sql.model.Properties;
 import com.project.json2sql.model.Summary;
+import com.project.json2sql.repository.AuditOwnerDetailsRepository;
 import com.project.json2sql.repository.ConfigPropertiesRepository;
 import com.project.json2sql.repository.OwnerDetailsRepository;
 import com.project.json2sql.repository.ProcessRepository;
 import com.project.json2sql.repository.PropertiesJpaRepository;
 import com.project.json2sql.repository.PropertiesRepository;
+import com.project.json2sql.repository.SchedulerRepository;
 import com.project.json2sql.repository.SummaryRepository;
 import com.project.json2sql.service.ProcessService;
 import com.project.json2sql.util.DateUtil;
@@ -60,6 +64,12 @@ public class ProcessServiceImpl implements ProcessService{
 	
 	@Autowired
 	PropertiesJpaRepository propertiesJpaRepository;
+	
+	@Autowired
+	SchedulerRepository schedulerRepository;
+	
+	@Autowired
+	AuditOwnerDetailsRepository auditOwnerDetailsRepository;
 	
 	public static final Logger logger = LoggerFactory.getLogger(ProcessServiceImpl.class);
 
@@ -200,19 +210,41 @@ public class ProcessServiceImpl implements ProcessService{
 	@Override
 	public OwnerDetails startProxyProcess(InputProxyDto inputObj) {
 		OwnerDetails ownerDetailsObj = new OwnerDetails();
+		AuditOwnerDetails auditOwnerDetails = new AuditOwnerDetails();
 		ConfigProperties configPropertiesObj = configPropertiesRepository.fetchById(1);
 		try {
 			if(null != configPropertiesObj) {
 				Root rootObj = ProxyCall.callProxy(configPropertiesObj, inputObj);
 				
 				if(rootObj != null) {
-					ownerDetailsObj.setFirstName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
-					ownerDetailsObj.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
-					ownerDetailsObj.setOwnerAddress(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
-					ownerDetailsObj.setOwnerName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
-					ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
-					ownerDetailsObj.setId(inputObj.getId().toString());
-					ownerDetailsRepository.save(ownerDetailsObj);
+					List<OwnerDetails> ownerDetailsListOldObj = ownerDetailsRepository.fetchById(inputObj.getId()+"");
+					if(ownerDetailsListOldObj.size()>0) {
+						//Audit table transfer
+						auditOwnerDetails.setFirstName(ownerDetailsListOldObj.get(0).getFirstName());
+						auditOwnerDetails.setLastName(ownerDetailsListOldObj.get(0).getLastName());
+						auditOwnerDetails.setOwnerAddress(ownerDetailsListOldObj.get(0).getOwnerAddress());
+						auditOwnerDetails.setOwnerName(ownerDetailsListOldObj.get(0).getOwnerName());
+						auditOwnerDetails.setCompanyName(ownerDetailsListOldObj.get(0).getCompanyName());
+						auditOwnerDetails.setId(ownerDetailsListOldObj.get(0).getId());
+						auditOwnerDetailsRepository.save(auditOwnerDetails);
+						
+						ownerDetailsObj.setOwnerId(ownerDetailsListOldObj.get(0).getOwnerId());
+						ownerDetailsObj.setFirstName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
+						ownerDetailsObj.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
+						ownerDetailsObj.setOwnerAddress(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
+						ownerDetailsObj.setOwnerName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
+						ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
+						ownerDetailsObj.setId(inputObj.getId().toString());
+						ownerDetailsRepository.save(ownerDetailsObj);
+					}else {
+						ownerDetailsObj.setFirstName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
+						ownerDetailsObj.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
+						ownerDetailsObj.setOwnerAddress(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
+						ownerDetailsObj.setOwnerName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
+						ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
+						ownerDetailsObj.setId(inputObj.getId().toString());
+						ownerDetailsRepository.save(ownerDetailsObj);
+					}
 				}
 			}
 			
@@ -271,7 +303,7 @@ public class ProcessServiceImpl implements ProcessService{
     public List<Properties> getAllProperties(int limit, int offset) {
 		List<Properties> propObj = new ArrayList<>();
 		try {
-        logger.info("Get all Employees with limit {} and offset {}", limit, offset);
+        logger.info("Get all Properties with limit {} and offset {}", limit, offset);
         Pageable pageable = new OffsetBasedPageRequest(limit, offset);
         propObj = propertiesJpaRepository.findAll(pageable).getContent();
 		} catch (Exception e) {
@@ -306,6 +338,21 @@ public class ProcessServiceImpl implements ProcessService{
 			logger.error("Error in Config prop Save Service"+e);
 		}
 		return cofigPropObj;
+	}
+
+
+
+	@Override
+	public List<ProcessScheduleJson> getAllFileList(int pageLimit, int offset) {
+		List<ProcessScheduleJson> fileObjList = new ArrayList<>();
+		try {
+        logger.info("Get all FIles with limit {} and offset {}", pageLimit, offset);
+        Pageable pageable = new OffsetBasedPageRequest(pageLimit, offset);
+        fileObjList = schedulerRepository.findAll(pageable).getContent();
+		} catch (Exception e) {
+			logger.error("Error in Property Fetch Service"+e);
+		}
+		return fileObjList;
 	}
 
 }

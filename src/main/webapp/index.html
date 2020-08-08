@@ -52,12 +52,38 @@
 	                    }).then(function (response) {
 	                    	$scope.responce = response.data.status;
 	                    	console.log(response.data);
-	                    	
 	                    });
                 	}
                 	alert("File Processed");
                 	$("#file").val('');
-                }
+                };
+                
+                $scope.uploadOwnerFile = function() {
+                	console.log(document.getElementById('fileOwner').files.length);
+                	for (var i = 0; i < document.getElementById('fileOwner').files.length; i++){
+                		var f = document.getElementById('fileOwner').files[i];
+	                	$http({
+	                        url: 'json2sql/uploadOwnerFile',
+	                        method: "POST",
+	                        headers: { 'Content-Type': undefined },
+	                        transformRequest: function (data) {
+	                            var formData = new FormData();
+	                            //formData.append("model", angular.toJson(data.model));
+	                            formData.append("file", f);
+	                            return formData;
+	                        },
+	                        data: { files: file }
+	                    }).then(function (response) {
+	                    	$scope.responce = response.data.status;
+	                    	console.log(response.data);
+	                    	if($scope.responce =="Failure"){
+	                    		alert("Error Occured while File Uplaod");
+	                    	}
+	                    });
+                	}
+                	alert("File Processed");
+                	$("#fileOwner").val('');
+                };
                 
             });
         </script>
@@ -147,6 +173,7 @@ footer {
 					<li><a href="propertyList.html">Property List</a></li>
 					<li><a href="ownerList.html">Owner List</a></li>
 					<li><a href="configProxy.html">Configure Proxy</a></li>
+					<li><a href="SchedulerFile.html">Processed File List</a></li>
 				</ul>
 			</div>
 		</div>
@@ -184,9 +211,9 @@ footer {
 						<h3>Upload Owner Details File</h3>
 						<form id='uploadForm' class="form-inline">
 							<div class="form-group">
-								<input type="file" id="file" name="file" multiple="multiple"
+								<input type="file" id="fileOwner" name="fileOwner" multiple="multiple"
 									ng-model="form.upload" class="form-control" />
-								<button ng-click="uploadFile();this.form.reset()"
+								<button ng-click="uploadOwnerFile()"
 									class="btn btn-primary btn-large center">Upload</button>
 								<button onClick="this.form.reset()"
 									class="btn btn-primary btn-large center">Clear Files</button>

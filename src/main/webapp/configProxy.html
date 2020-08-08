@@ -17,17 +17,16 @@
 
 	//Controller Part
 	app.controller("UserManagementController", function($scope, $http) {
-
 		_refreshPageData();
 
-		$scope.submitConfig = function(port, host, url, contentType, charset, authorization) {
-			console.log("")
-			/*var method = "POST";
+		$scope.submitConfig = function(accept, acceptEncoding, port, host, proxyurl, contentType, charset, authorization) {
+			var method = "POST";
 			var url = 'json2sql/setConfigDetails/';
 			var data = {
+					id: 1,
 					port: port,
 					host: host,
-					url: url,
+					url: proxyurl,
 					contentType: contentType,
 					charset: charset,
 					authorization: authorization,
@@ -45,7 +44,7 @@
 				$scope.config = response.data;
 			}, function errorCallback(response) {
 				console.log(response.statusText);
-			});*/
+			});
 		}
 
 		/* Private Methods */
@@ -55,7 +54,7 @@
 				method : 'GET',
 				url : 'json2sql/configDetails'
 			}).then(function successCallback(response) {
-				$scope.cofig = response.data;
+				$scope.config = response.data;
 			}, function errorCallback(response) {
 				console.log(response.statusText);
 			});
@@ -150,6 +149,7 @@ footer {
 					<li><a href="ownerList.html">Owner List</a></li>
 					<li class="active"><a href="configProxy.html">Configure
 							Proxy</a></li>
+					<li><a href="SchedulerFile.html">Processed File List</a></li>
 				</ul>
 			</div>
 		</div>
@@ -171,50 +171,49 @@ footer {
 			<div class="col-sm-8 text-centre">
 				<div class="card text-primary border-primary border-right-0">
 					<div class="card-body">
-
 						<form >
 							<div class="form-group">
 								<label for="exampleInputEmail1">Accept</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Accept Value" ng-model="{{cofig.accept}}">
+									placeholder="Accept Value" ng-model="config.accept">
 							</div>
 							<div class="form-group">
 								<label for="exampleInputEmail1">Accept Encoding</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Accept Encoding Value" ng-model="{{cofig.acceptEncoding}}">
+									placeholder="Accept Encoding Value" ng-model="config.acceptEncoding">
 							</div>
 							<div class="form-group">
 								<label for="exampleInputEmail1">Authorization</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Authorization value" ng-model="{{cofig.authorization}}">
+									placeholder="Authorization value" ng-model="config.authorization">
 							</div>
 							<div class="form-group">
 								<label for="exampleInputEmail1">Charset</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Charset Value" ng-model="{{cofig.charset}}">
+									placeholder="Charset Value" ng-model="config.charset">
 							</div>
 							<div class="form-group">
 								<label for="exampleInputEmail1">Content Type</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Content Type Value" ng-model="{{cofig.contentType}}">
+									placeholder="Content Type Value" ng-model="config.contentType">
 							</div>
 							<div class="form-group">
 								<label for="exampleInputEmail1">Host</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Host Value" ng-model="{{cofig.host}}">
+									placeholder="Host Value" ng-model="config.host">
 							</div>
 							<div class="form-group">
 								<label for="exampleInputEmail1">Port</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Port Value" ng-model="{{cofig.port}}">
+									placeholder="Port Value" ng-model="config.port">
 							</div>
 							<div class="form-group">
 								<label for="exampleInputEmail1">URL</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="URL Value" ng-model="{{cofig.url}}">
+									placeholder="URL Value" ng-model="config.url">
 							</div>
 							<button type="submit" class="btn btn-primary btn-large center" 
-							ng-click="submitConfig(cofig.port, cofig.host, cofig.url, cofig.contentType, cofig.charset, cofig.authorization)">Submit</button>
+							ng-click="submitConfig(config.accept, config.acceptEncoding, config.port, config.host, config.url, config.contentType, config.charset, config.authorization)">Submit</button>
 						</form>
 					</div>
 				</div>
