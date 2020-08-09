@@ -13,7 +13,7 @@ public class Scheduler {
 	@Autowired
 	SchedulerService schedulerService;
 	
-	@Scheduled(cron="0 0/5 * * * ?")
+	@Scheduled(cron="0 0/1 * * * ?")
 	public void cronJobSch() {
       System.out.println("Java cron job expression:: " + DateUtil.getCurrentDateTime());
       schedulerService.processJsonUploadJob();

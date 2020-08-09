@@ -23,9 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.MainJson;
-import com.project.json2sql.model.OwnerDetails;
+import com.project.json2sql.model.AuditProperties;
 import com.project.json2sql.model.ProcessScheduleJson;
 import com.project.json2sql.model.Properties;
 import com.project.json2sql.service.ProcessService;
@@ -188,4 +187,31 @@ public class MainController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
+	
+	@GetMapping("/getAuditPropertiesByLimit/{offset}")
+	@ResponseBody
+	public ResponseEntity<?> getAuditPropertiesByLimit(@PathVariable int offset) {
+		List<AuditProperties> propertiesObj = new ArrayList<>();
+		try {
+			propertiesObj = processService.getAllAuditProperties(pageLimit, offset);
+			return ResponseEntity.status(HttpStatus.OK).body(propertiesObj);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/getAuditPropertiesById/{id}")
+	@ResponseBody
+	public ResponseEntity<?> getAuditPropertiesById(@PathVariable String id) {
+		List<AuditProperties> propertiesObj = new ArrayList<>();
+		try {
+			propertiesObj = processService.getAuditPropertiesById(id);
+			return ResponseEntity.status(HttpStatus.OK).body(propertiesObj);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
 }

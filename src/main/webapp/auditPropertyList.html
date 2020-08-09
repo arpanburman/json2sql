@@ -18,15 +18,15 @@
 	//Controller Part
 	app.controller("UserManagementController", function($scope, $http) {
 		$scope.offset = 0;
+		$scope.count = 0;
 		//Initialize page with default data which is blank in this example
-		$scope.employees = [];
+		$scope.auditProps = [];
 		$scope.form = {
 			id : ""
 		};
 
 		//Now load the data from server
 		_refreshPageData();
-		_countData();
 
 		$scope.submitID = function() {
 
@@ -35,11 +35,11 @@
 			if ($scope.form.id == null) {
 				//Id is absent so add employee - POST operation
 				method = "GET";
-				url = 'json2sql/getProperties';
+				url = 'json2sql/getAuditPropertiesByLimit' + $scope.offset;
 			} else {
 				//If Id is present, it's edit operation - PUT operation
 				method = "GET";
-				url = 'json2sql/getPropertiesById/' + $scope.form.id;
+				url = 'json2sql/getAuditPropertiesById/' + $scope.form.id;
 			}
 
 			$http({
@@ -50,7 +50,7 @@
 					'Content-Type' : 'application/json'
 				}
 			}).then(function successCallback(response) {
-				$scope.employees = response.data;
+				$scope.auditProps = response.data;
 			}, function errorCallback(response) {
 				console.log(response.statusText);
 			});
@@ -61,26 +61,16 @@
 		function _refreshPageData() {
 			$http({
 				method : 'GET',
-				url : 'json2sql/getPropertiesByLimit/' + $scope.offset
+				url : 'json2sql/getAuditPropertiesByLimit/' + $scope.offset
 			}).then(function successCallback(response) {
-				$scope.employees = response.data;
-			}, function errorCallback(response) {
-				console.log(response.statusText);
-			});
-		}
-		function _countData() {
-			$http({
-				method : 'GET',
-				url : 'json2sql/getPropertiesCount'
-			}).then(function successCallback(response) {
-				$scope.count = response.data;
+				$scope.auditProps = response.data;
+				$scope.count= $scope.auditProps.length;
 			}, function errorCallback(response) {
 				console.log(response.statusText);
 			});
 		}
 		$scope.reset = function() {
 			_refreshPageData();
-			_countData();
 			_clearForm();
 		}
 		$scope.nextOffset = function() {
@@ -192,9 +182,9 @@ footer {
 			<div class="collapse navbar-collapse" id="myNavbar">
 				<ul class="nav navbar-nav">
 					<li><a href="index.html">Home</a></li>
-					<li class="active"><a href="propertyList.html">Property
+					<li><a href="propertyList.html">Property
 							List</a></li>
-					<li><a href="auditPropertyList.html">Audit Property
+					<li class="active"><a href="auditPropertyList.html">Audit Property
 							List</a></li>
 					<li><a href="ownerList.html">Owner List</a></li>
 					<li><a href="configProxy.html">Configure Proxy</a></li>
@@ -212,8 +202,8 @@ footer {
 						<h3>Search Record</h3>
 						<form ng-submit="submitID()" class="form-inline">
 							<div class="form-group">
-								<label>Search With ID:</label> <input type="text"
-									ng-model="form.id" placeholder="Enter a ID:"
+								<label>History for ID:</label> <input type="text"
+									ng-model="form.id" placeholder="Enter a Valid ID"
 									class="form-control" />&nbsp; <input type="submit"
 									value="Submit" class="btn btn-primary btn-large center" />&nbsp;
 								<button class="btn btn-primary btn-large center" type="reset"
@@ -222,12 +212,12 @@ footer {
 						</form>
 					</div>
 				</div>
-				<h3>Total Records : {{count}}</h3>
+				<h3>Property History Records are Listed Here</h3>
 				<ul class="pager">
 					<li class="previous"><button type="button"
-							class="btn btn-primary" ng-click="prevOffset()">Previous</button></li>
+							class="btn btn-primary" ng-click="prevOffset()">Previous Page</button></li>
 					<li class="next"><button type="button" class="btn btn-primary"
-							ng-click="nextOffset()">Next</button></li>
+							ng-click="nextOffset()">Next Page</button></li>
 				</ul>
 			</div>
 
@@ -243,6 +233,7 @@ footer {
 				<table class="table table-striped">
 					<tr>
 						<th>Id</th>
+						<th>Update Date</th>
 						<th>Type</th>
 						<th>Lon</th>
 						<th>Unit Number</th>
@@ -301,64 +292,65 @@ footer {
 						<th>process_id</th>
 					</tr>
 
-					<tr ng-repeat="employee in employees | filter:search">
-						<td>{{ employee.id }}</td>
-						<td>{{ employee.type }}</td>
-						<td>{{ employee.lon }}</td>
-						<td>{{ employee.unitNumber}}</td>
-						<td>{{ employee.streetNumber}}</td>
-						<td>{{ employee.streetName}}</td>
-						<td>{{ employee.streetType}}</td>
-						<td>{{ employee.streetDirection}}</td>
-						<td>{{ employee.address}}</td>
-						<td>{{ employee.suburb}}</td>
-						<td>{{ employee.postcode}}</td>
-						<td>{{ employee.state}}</td>
-						<td>{{ employee.bathrooms}}</td>
-						<td>{{ employee.bedrooms}}</td>
-						<td>{{ employee.parking}}</td>
-						<td>{{ employee.landSize}}</td>
-						<td>{{ employee.salePrice}}</td>
-						<td>{{ employee.saleDate}}</td>
-						<td>{{ employee.onTheMarket}}</td>
-						<td>{{ employee.listingDate}}</td>
-						<td>{{ employee.listingPrice}}</td>
-						<td>{{ employee.listingDescription}}</td>
-						<td>{{ employee.listedType}}</td>
-						<td>{{ employee.auctionDate}}</td>
-						<td>{{ employee.auctionTime}}</td>
-						<td>{{ employee.rentalListingDate}}</td>
-						<td>{{ employee.REAId}}</td>
-						<td>{{ employee.rentalListingPeriod}}</td>
-						<td>{{ employee.rentalListingPrice}}</td>
-						<td>{{ employee.agentName}}</td>
-						<td>{{ employee.recentSales}}</td>
-						<td>{{ employee.photo}}</td>
-						<td>{{ employee.ucv}}</td>
-						<td>{{ employee.ucvDate}}</td>
-						<td>{{ employee.realPropertyDescriptor}}</td>
-						<td>{{ employee.lgaName}}</td>
-						<td>{{ employee.lastSaleType}}</td>
-						<td>{{ employee.lotPlan}}</td>
-						<td>{{ employee.zoning}}</td>
-						<td>{{ employee.isAgentAdvised}}</td>
-						<td>{{ employee.landUsePrimary}}</td>
-						<td>{{ employee.currentRentalPrice}}</td>
-						<td>{{ employee.forRent}}</td>
-						<td>{{ employee.forRentDaysOnMarket}}</td>
-						<td>{{ employee.forRentAgencyName}}</td>
-						<td>{{ employee.occupancyType}}</td>
-						<td>{{ employee.volume}}</td>
-						<td>{{ employee.folio}}</td>
-						<td>{{ employee.titlePrefix}}</td>
-						<td>{{ employee.titleSuffix}}</td>
-						<td>{{ employee.mapReference}}</td>
-						<td>{{ employee.block}}</td>
-						<td>{{ employee.section}}</td>
-						<td>{{ employee.parcelList}}</td>
-						<td>{{ employee.developmentZone}}</td>
-						<td>{{ employee.isPriceWithheld}}</td>
-						<td>{{ employee.process_id}}</td>
+					<tr ng-repeat="auditProp in auditProps | filter:search">
+						<td>{{ auditProp.id }}</td>
+						<td>{{ auditProp.createdDate }}</td>
+						<td>{{ auditProp.type }}</td>
+						<td>{{ auditProp.lon }}</td>
+						<td>{{ auditProp.unitNumber}}</td>
+						<td>{{ auditProp.streetNumber}}</td>
+						<td>{{ auditProp.streetName}}</td>
+						<td>{{ auditProp.streetType}}</td>
+						<td>{{ auditProp.streetDirection}}</td>
+						<td>{{ auditProp.address}}</td>
+						<td>{{ auditProp.suburb}}</td>
+						<td>{{ auditProp.postcode}}</td>
+						<td>{{ auditProp.state}}</td>
+						<td>{{ auditProp.bathrooms}}</td>
+						<td>{{ auditProp.bedrooms}}</td>
+						<td>{{ auditProp.parking}}</td>
+						<td>{{ auditProp.landSize}}</td>
+						<td>{{ auditProp.salePrice}}</td>
+						<td>{{ auditProp.saleDate}}</td>
+						<td>{{ auditProp.onTheMarket}}</td>
+						<td>{{ auditProp.listingDate}}</td>
+						<td>{{ auditProp.listingPrice}}</td>
+						<td>{{ auditProp.listingDescription}}</td>
+						<td>{{ auditProp.listedType}}</td>
+						<td>{{ auditProp.auctionDate}}</td>
+						<td>{{ auditProp.auctionTime}}</td>
+						<td>{{ auditProp.rentalListingDate}}</td>
+						<td>{{ auditProp.REAId}}</td>
+						<td>{{ auditProp.rentalListingPeriod}}</td>
+						<td>{{ auditProp.rentalListingPrice}}</td>
+						<td>{{ auditProp.agentName}}</td>
+						<td>{{ auditProp.recentSales}}</td>
+						<td>{{ auditProp.photo}}</td>
+						<td>{{ auditProp.ucv}}</td>
+						<td>{{ auditProp.ucvDate}}</td>
+						<td>{{ auditProp.realPropertyDescriptor}}</td>
+						<td>{{ auditProp.lgaName}}</td>
+						<td>{{ auditProp.lastSaleType}}</td>
+						<td>{{ auditProp.lotPlan}}</td>
+						<td>{{ auditProp.zoning}}</td>
+						<td>{{ auditProp.isAgentAdvised}}</td>
+						<td>{{ auditProp.landUsePrimary}}</td>
+						<td>{{ auditProp.currentRentalPrice}}</td>
+						<td>{{ auditProp.forRent}}</td>
+						<td>{{ auditProp.forRentDaysOnMarket}}</td>
+						<td>{{ auditProp.forRentAgencyName}}</td>
+						<td>{{ auditProp.occupancyType}}</td>
+						<td>{{ auditProp.volume}}</td>
+						<td>{{ auditProp.folio}}</td>
+						<td>{{ auditProp.titlePrefix}}</td>
+						<td>{{ auditProp.titleSuffix}}</td>
+						<td>{{ auditProp.mapReference}}</td>
+						<td>{{ auditProp.block}}</td>
+						<td>{{ auditProp.section}}</td>
+						<td>{{ auditProp.parcelList}}</td>
+						<td>{{ auditProp.developmentZone}}</td>
+						<td>{{ auditProp.isPriceWithheld}}</td>
+						<td>{{ auditProp.process_id}}</td>
 
 						<!-- <td><a ng-click="editEmployee( employee )" class="button">Edit</a> | <a ng-click="removeEmployee( employee )" class="button">Remove</a></td>-->
 					</tr>

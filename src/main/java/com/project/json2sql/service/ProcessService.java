@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.MainJson;
+import com.project.json2sql.model.AuditProperties;
 import com.project.json2sql.model.ConfigProperties;
 import com.project.json2sql.model.OwnerDetails;
 import com.project.json2sql.model.ProcessScheduleJson;
@@ -31,5 +32,9 @@ public interface ProcessService {
 	ConfigProperties setConfigDetails(ConfigProperties configObj);
 
 	List<ProcessScheduleJson> getAllFileList(int pageLimit, int offset);
+
+	List<AuditProperties> getAllAuditProperties(int pageLimit, int offset);
+
+	List<AuditProperties> getAuditPropertiesById(String id);
 
 }

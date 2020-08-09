@@ -8,12 +8,15 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="properties")
-public class Properties {
+@Table(name="audit_properties")
+public class AuditProperties {
 	
 	@Id
-	@Column(name="properties_id")
+	@Column(name="audit_properties_id")
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private long auditPropertiesId;
+	
+	@Column(name="properties_id")
 	private long propertiesId;
 	
 	@Column(name="type")
@@ -201,6 +204,17 @@ public class Properties {
 	
 	@Column(name="updated_by")
 	private String updatedBy;
+
+	
+
+	public long getAuditPropertiesId() {
+		return auditPropertiesId;
+	}
+
+	public void setAuditPropertiesId(long auditPropertiesId) {
+		this.auditPropertiesId = auditPropertiesId;
+	}
+
 
 	public long getPropertiesId() {
 		return propertiesId;

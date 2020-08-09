@@ -18,7 +18,7 @@
 	//Controller Part
 	app.controller("UserManagementController", function($scope, $http) {
 		$scope.offset = 0;
-		$scope.length=0;
+		$scope.length = 0;
 		//Initialize page with default data which is blank in this example
 
 		//Now load the data from server
@@ -42,7 +42,7 @@
 			_clearForm();
 		}
 		$scope.nextOffset = function() {
-			if($scope.offset<=$scope.length){
+			if ($scope.offset <= $scope.length) {
 				$scope.offset = $scope.offset + 10;
 				_refreshPageData();
 			}
@@ -166,6 +166,14 @@ footer {
 				<div class="card text-primary border-primary ">
 					<div class="card-body text-center">
 						<h3>Properties Processed Files Record</h3>
+						<ul class="pager">
+							<li class="previous"><button type="button"
+									class="btn btn-primary" ng-click="prevOffset()">Previous
+									Page</button></li>
+							<li class="next"><button type="button"
+									class="btn btn-primary" ng-click="nextOffset()">Next
+									Page</button></li>
+						</ul>
 						<table class="table table-striped">
 							<tr>
 								<th>Id</th>
@@ -188,13 +196,7 @@ footer {
 						</table>
 					</div>
 				</div>
-				<ul class="pager">
-					<li class="previous"><button type="button"
-							class="btn btn-primary" ng-click="prevOffset()">Previous
-							Page</button></li>
-					<li class="next"><button type="button" class="btn btn-primary"
-							ng-click="nextOffset()">Next Page</button></li>
-				</ul>
+
 			</div>
 
 			<!-- <form class="form-inline">
