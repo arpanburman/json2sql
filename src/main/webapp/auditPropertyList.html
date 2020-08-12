@@ -19,6 +19,7 @@
 	app.controller("UserManagementController", function($scope, $http) {
 		$scope.offset = 0;
 		$scope.count = 0;
+		$scope.diffData = [];
 		//Initialize page with default data which is blank in this example
 		$scope.auditProps = [];
 		$scope.form = {
@@ -69,6 +70,18 @@
 				console.log(response.statusText);
 			});
 		}
+		
+		$scope.getDiffData=function(id) {
+			$http({
+				method : 'GET',
+				url : 'json2sql/getDiff/'+id
+			}).then(function successCallback(response) {
+				$scope.diffData = response.data;
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
 		$scope.reset = function() {
 			_refreshPageData();
 			_clearForm();
@@ -293,7 +306,7 @@ footer {
 					</tr>
 
 					<tr ng-repeat="auditProp in auditProps | filter:search">
-						<td>{{ auditProp.id }}</td>
+						<td><button type="button" class="btn btn-primary" ng-click="getDiffData(auditProp.id)" class="button">{{ auditProp.id }}</button></td>
 						<td>{{ auditProp.createdDate }}</td>
 						<td>{{ auditProp.type }}</td>
 						<td>{{ auditProp.lon }}</td>
@@ -356,14 +369,19 @@ footer {
 					</tr>
 
 				</table>
+				<div class="alert alert-primary" role="alert">
+				<p>Difference Data will be show below Eg.(Old data, New Data)</p>
+				  <hr>
+				  <p class="mb-0">{{diffData.data}}</p>
+				</div>
+			</div>
+			<div class="col-sm-8 text-centre">
+				
 			</div>
 		</div>
 	</div>
 	<footer class="container-fluid text-center">
 		<p>Copy Right Protected</p>
 	</footer>
-	<!--
-       
- -->
 </body>
 </html>

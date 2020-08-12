@@ -1,15 +1,19 @@
 package com.project.json2sql.controller;
 
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.json2sql.dto.ConfigurationDto;
 import com.project.json2sql.dto.InputProxyDto;
+import com.project.json2sql.model.AuditProperties;
 import com.project.json2sql.model.ConfigProperties;
 import com.project.json2sql.model.OwnerDetails;
 import com.project.json2sql.service.ProcessService;
@@ -35,6 +41,9 @@ public class OwnerController {
 	
 	public static final Logger logger = LoggerFactory.getLogger(OwnerController.class);
 
+	@Value("${pageLimit}")
+    private int pageLimit;
+	
 	@Autowired
 	ProcessService processService;
 	
@@ -103,6 +112,60 @@ public class OwnerController {
 		OwnerDetails ownerDetailsObj = new OwnerDetails();
 		try {
 			ownerDetailsObj = processService.startProxyProcess(inputObj);
+			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/getOwnerByLimit/{offset}")
+	@ResponseBody
+	public ResponseEntity<?> getOwnerLimit(@PathVariable int offset) {
+		List<OwnerDetails> OwnerObjList = new ArrayList<>();
+		try {
+			OwnerObjList = processService.getAllOwners(pageLimit, offset);
+			return ResponseEntity.status(HttpStatus.OK).body(OwnerObjList);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/getOwnerById/{id}")
+	@ResponseBody
+	public ResponseEntity<?> getOwnerById(@PathVariable String id) {
+		List<OwnerDetails> OwnerObjList = new ArrayList<>();
+		try {
+			OwnerObjList = processService.getOwnerById(id);
+			return ResponseEntity.status(HttpStatus.OK).body(OwnerObjList);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/getOwnerCount")
+	@ResponseBody
+	public ResponseEntity<?> getOwnerCount() {
+		int count = 0;
+		try {
+			count = processService.getOwnerCount();
+			return ResponseEntity.status(HttpStatus.OK).body(count);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@PostMapping("/getExecuteProxy")
+	@ResponseBody
+	public ResponseEntity<?> getExecuteProxy(@RequestBody ConfigurationDto configDtoObj) {
+		logger.info("Process Start");
+		OwnerDetails ownerDetailsObj = new OwnerDetails();
+		String status = "N";
+		try {
+			status = processService.getExecuteProxy(configDtoObj);
 			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");

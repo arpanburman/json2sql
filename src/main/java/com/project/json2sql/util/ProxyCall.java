@@ -4,12 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.ProxySelector;
-import java.net.URI;
 import java.net.URL;
-import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
 
@@ -17,8 +12,10 @@ import com.google.gson.Gson;
 import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.Root;
 import com.project.json2sql.model.ConfigProperties;
+import com.project.json2sql.model.OwnerProcess;
 
 public class ProxyCall {
+	
 /*
 	public static void main(String s[]) throws Exception {
 		try {
@@ -51,25 +48,26 @@ public class ProxyCall {
 				}
 	}*/
 
-	public static Root callProxy(ConfigProperties configPropertiesObj, InputProxyDto inputObj) {
+	public static Root callProxy(ConfigProperties configDtoObj, InputProxyDto inputObj) throws Exception {
 		Root rootObj = new Root();
+		URL u = new URL(configDtoObj.getUrl());
+		HttpURLConnection conn = (HttpURLConnection)u.openConnection();
 		try {
-			Properties systemSettings = System.getProperties();
+			/*Properties systemSettings = System.getProperties();
 			systemSettings.put("proxySet", "true");
 			systemSettings.put("http.proxyHost", configPropertiesObj.getHost());
-			systemSettings.put("http.proxyPort", configPropertiesObj.getPort());
-
-			URL u = new URL(configPropertiesObj.getUrl());
-			HttpURLConnection conn = (HttpURLConnection)u.openConnection();
+			systemSettings.put("http.proxyPort", configPropertiesObj.getPort());*/
 
 			conn.setDoOutput( true );
 			conn.setInstanceFollowRedirects( false );
 			conn.setRequestMethod( "POST" );
-			conn.setRequestProperty( "Content-Type", configPropertiesObj.getContentType()); 
-			conn.setRequestProperty( "charset", configPropertiesObj.getCharset());
-			conn.setRequestProperty( "Authorization", configPropertiesObj.getAuthorization());
-			conn.setRequestProperty( "Accept", configPropertiesObj.getAccept());
-			conn.setRequestProperty( "Accept-Encoding", configPropertiesObj.getAcceptEncoding());
+			conn.setRequestProperty( "Content-Type", "application/json"); 
+			conn.setRequestProperty( "charset", "utf-8");
+			conn.setRequestProperty( "Authorization", configDtoObj.getAuthorization());
+			conn.setRequestProperty( "Accept", "application/json");
+			conn.setRequestProperty( "Accept-Encoding", "gzip");
+			conn.setRequestProperty( "Cache-Control", "no-cache");
+			//conn.setRequestProperty( "User-Agent", "");
 			conn.setUseCaches( false );
 			conn.setDoOutput(true);
 			conn.setDoInput(true);
@@ -98,14 +96,14 @@ public class ProxyCall {
 			
 			System.out.println(conn.getResponseCode() + " : " + conn.getResponseMessage());
 			System.out.println(conn.getResponseCode() == HttpURLConnection.HTTP_OK);
-
+			
 			if(conn.getResponseCode() !=200) {
 				throw new RuntimeException("Failed : HTTP error code : "
 						+ conn.getResponseCode());
 			}
 
 			System.out.println("Using proxy:" + conn.usingProxy()); 
-
+			
 			/*StringBuilder response = new StringBuilder(); 
 			String responseSingle = null; 
 			while ((responseSingle = br1.readLine()) != null)  
@@ -118,6 +116,8 @@ public class ProxyCall {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(false);
+		}finally {
+			conn.disconnect();
 		}
 		
 		return rootObj;

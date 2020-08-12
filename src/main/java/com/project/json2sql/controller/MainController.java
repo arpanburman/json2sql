@@ -2,7 +2,9 @@ package com.project.json2sql.controller;
 
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.MapDifference.ValueDifference;
 import com.project.json2sql.dto.MainJson;
 import com.project.json2sql.model.AuditProperties;
 import com.project.json2sql.model.ProcessScheduleJson;
@@ -210,6 +213,22 @@ public class MainController {
 			return ResponseEntity.status(HttpStatus.OK).body(propertiesObj);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/getDiff/{id}")
+	@ResponseBody
+	public ResponseEntity<?> getDiff(@PathVariable String id) {
+		Map<Object, ValueDifference<Object>> diffObj = null;
+		Map<Object, Object> diifMap = new HashMap<Object, Object>();
+		try {
+			diffObj = processService.getDiff(id);
+			String diffObjSt = diffObj.toString();
+			diifMap.put("data", diffObjSt);
+			return ResponseEntity.status(HttpStatus.OK).body(diifMap);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch"+ex);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}

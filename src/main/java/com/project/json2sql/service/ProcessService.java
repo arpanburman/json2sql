@@ -1,7 +1,10 @@
 package com.project.json2sql.service;
 
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.MapDifference.ValueDifference;
+import com.project.json2sql.dto.ConfigurationDto;
 import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.MainJson;
 import com.project.json2sql.model.AuditProperties;
@@ -36,5 +39,15 @@ public interface ProcessService {
 	List<AuditProperties> getAllAuditProperties(int pageLimit, int offset);
 
 	List<AuditProperties> getAuditPropertiesById(String id);
+
+	List<OwnerDetails> getAllOwners(int pageLimit, int offset);
+
+	List<OwnerDetails> getOwnerById(String id);
+
+	Map<Object, ValueDifference<Object>> getDiff(String id);
+
+	int getOwnerCount();
+
+	String getExecuteProxy(ConfigurationDto configDtoObj);
 
 }

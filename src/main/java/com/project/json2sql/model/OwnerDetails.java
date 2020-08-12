@@ -33,6 +33,15 @@ public class OwnerDetails {
 	
 	@Column(name="companyName")
 	private String companyName;
+	
+	@Column(name="cretatedDate")
+	private String createdDate;
+	
+	@Column(name="cretatedBy")
+	private String createdBy;
+	
+	@Column(name="isActive")
+	private String isActive;
 
 	public long getOwnerId() {
 		return ownerId;
@@ -88,6 +97,30 @@ public class OwnerDetails {
 
 	public void setCompanyName(String companyName) {
 		this.companyName = companyName;
+	}
+
+	public String getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate(String createdDate) {
+		this.createdDate = createdDate;
+	}
+
+	public String getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public String getIsActive() {
+		return isActive;
+	}
+
+	public void setIsActive(String isActive) {
+		this.isActive = isActive;
 	}
 	
 	

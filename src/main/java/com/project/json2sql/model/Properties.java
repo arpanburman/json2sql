@@ -201,6 +201,9 @@ public class Properties {
 	
 	@Column(name="updated_by")
 	private String updatedBy;
+	
+	@Column(name="isActive")
+	private String isActive;
 
 	public long getPropertiesId() {
 		return propertiesId;
@@ -704,6 +707,38 @@ public class Properties {
 
 	public void setUpdatedBy(String updatedBy) {
 		this.updatedBy = updatedBy;
+	}
+
+	public String getIsActive() {
+		return isActive;
+	}
+
+	public void setIsActive(String isActive) {
+		this.isActive = isActive;
+	}
+
+	@Override
+	public String toString() {
+		return "Properties [propertiesId=" + propertiesId + ", type=" + type + ", id=" + id + ", lat=" + lat + ", lon="
+				+ lon + ", unitNumber=" + unitNumber + ", streetNumber=" + streetNumber + ", streetName=" + streetName
+				+ ", streetType=" + streetType + ", streetDirection=" + streetDirection + ", address=" + address
+				+ ", suburb=" + suburb + ", postcode=" + postcode + ", state=" + state + ", bathrooms=" + bathrooms
+				+ ", bedrooms=" + bedrooms + ", parking=" + parking + ", landSize=" + landSize + ", salePrice="
+				+ salePrice + ", saleDate=" + saleDate + ", onTheMarket=" + onTheMarket + ", listingDate=" + listingDate
+				+ ", listingPrice=" + listingPrice + ", listingDescription=" + listingDescription + ", listedType="
+				+ listedType + ", auctionDate=" + auctionDate + ", auctionTime=" + auctionTime + ", rentalListingDate="
+				+ rentalListingDate + ", rentalListingPrice=" + rentalListingPrice + ", rentalListingPeriod="
+				+ rentalListingPeriod + ", REAId=" + REAId + ", agentName=" + agentName + ", recentSales=" + recentSales
+				+ ", photo=" + photo + ", ucv=" + ucv + ", ucvDate=" + ucvDate + ", realPropertyDescriptor="
+				+ realPropertyDescriptor + ", lgaName=" + lgaName + ", lastSaleType=" + lastSaleType + ", lotPlan="
+				+ lotPlan + ", zoning=" + zoning + ", isAgentAdvised=" + isAgentAdvised + ", landUsePrimary="
+				+ landUsePrimary + ", currentRentalPrice=" + currentRentalPrice + ", forRent=" + forRent
+				+ ", forRentDaysOnMarket=" + forRentDaysOnMarket + ", forRentAgencyName=" + forRentAgencyName
+				+ ", occupancyType=" + occupancyType + ", volume=" + volume + ", folio=" + folio + ", titlePrefix="
+				+ titlePrefix + ", titleSuffix=" + titleSuffix + ", mapReference=" + mapReference + ", block=" + block
+				+ ", section=" + section + ", parcelList=" + parcelList + ", developmentZone=" + developmentZone
+				+ ", isPriceWithheld=" + isPriceWithheld + ", processId=" + processId + ", createdDate=" + createdDate
+				+ ", createdBy=" + createdBy + ", lastUpdated=" + lastUpdated + ", updatedBy=" + updatedBy + "]";
 	}
 
 	
