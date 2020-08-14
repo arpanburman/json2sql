@@ -14,8 +14,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
@@ -102,7 +103,7 @@ public class ProcessServiceImpl implements ProcessService {
 	@Autowired
 	OwnerProcessRepository ownerProcessRepository;
 
-	private ScheduledExecutorService service;
+	private ExecutorService service;
 
 	public static final Logger logger = LoggerFactory.getLogger(ProcessServiceImpl.class);
 
@@ -780,27 +781,35 @@ public class ProcessServiceImpl implements ProcessService {
 	}
 
 	@Override
-	public void multiThreadExecuteProxy(ConfigurationDto configDtoObj) {
+	public void multiThreadExecuteProxy(ConfigurationDto configDtoObj) throws Exception {
 		try {
-			service = Executors.newScheduledThreadPool(THREAD_POOL_VALUE);
+			service = Executors.newFixedThreadPool(THREAD_POOL_VALUE);
 			List<Properties> propObjList = propertiesJpaRepository.findAll();
-			for (Properties propObj : propObjList) {
-				ExecuteProxyTask proxyTask = new ExecuteProxyTask(configDtoObj, propObj);
-				service.scheduleWithFixedDelay(proxyTask, 0, 10, TimeUnit.SECONDS);
-			}
-			service.awaitTermination(10, TimeUnit.SECONDS);
-
+			List<Future<String>> resultList = null;
+			List<ExecuteProxyTask> taskList = new ArrayList<ExecuteProxyTask>();
+			createTaskListProcess(configDtoObj, propObjList, taskList);
+			resultList = service.invokeAll(taskList);
 		} catch (Exception e) {
 			logger.error("Error in multiThreadExecuteProxy Service" + e);
 		} finally {
 			service.shutdown();
+			service.awaitTermination(1, TimeUnit.SECONDS);
+		}
+	}
+
+	private void createTaskListProcess(ConfigurationDto configDtoObj, List<Properties> propObjList,
+			List<ExecuteProxyTask> taskList) {
+		for (Properties propObj : propObjList) {
+			ExecuteProxyTask proxyTask = new ExecuteProxyTask(configDtoObj, propObj);
+			taskList.add(proxyTask);
 		}
 	}
 
 	@Override
-	public void stopMultiThreadExecuteProxy(ConfigurationDto configDtoObj) {
+	public void stopMultiThreadExecuteProxy(ConfigurationDto configDtoObj) throws InterruptedException {
 		if (null != service && !service.isShutdown()) {
 			service.shutdown();
+			service.awaitTermination(1, TimeUnit.SECONDS);
 		}
 
 	}

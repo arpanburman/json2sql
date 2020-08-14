@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -25,7 +26,7 @@ import com.project.json2sql.repository.OwnerDetailsRepository;
 import com.project.json2sql.repository.OwnerProcessRepository;
 import com.project.json2sql.util.DateUtil;
 
-public class ExecuteProxyTask implements Runnable {
+public class ExecuteProxyTask implements Callable<String> {
 
 	private final ConfigurationDto configDtoObj;
 	private final Properties propObj;
@@ -48,7 +49,8 @@ public class ExecuteProxyTask implements Runnable {
 	}
 
 	@Override
-	public void run() {
+	public String call() throws Exception {
+		Thread.sleep(10000);
 		OwnerDetails ownerDetailsObj = new OwnerDetails();
 		AuditOwnerDetails auditOwnerDetails = new AuditOwnerDetails();
 		String status = "N";
@@ -127,7 +129,7 @@ public class ExecuteProxyTask implements Runnable {
 			status = "N";
 			logger.error("Error in Proxy Service" + e);
 		}
-		// return status;
+		return status;
 	}
 
 	public Root callProxy(ConfigurationDto configDtoObj, InputProxyDto inputObj, OwnerProcess ownerProcess)
