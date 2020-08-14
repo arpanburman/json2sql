@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
@@ -785,13 +784,11 @@ public class ProcessServiceImpl implements ProcessService {
 		try {
 			service = Executors.newScheduledThreadPool(THREAD_POOL_VALUE);
 			List<Properties> propObjList = propertiesJpaRepository.findAll();
-			List<ScheduledFuture<String>> results = new ArrayList<ScheduledFuture<String>>();
 			for (Properties propObj : propObjList) {
 				ExecuteProxyTask proxyTask = new ExecuteProxyTask(configDtoObj, propObj);
-				ScheduledFuture<String> result = service.schedule(proxyTask, 5, TimeUnit.SECONDS);
-				results.add(result);
+				service.scheduleWithFixedDelay(proxyTask, 0, 10, TimeUnit.SECONDS);
 			}
-			service.awaitTermination(1, TimeUnit.SECONDS);
+			service.awaitTermination(10, TimeUnit.SECONDS);
 
 		} catch (Exception e) {
 			logger.error("Error in multiThreadExecuteProxy Service" + e);
