@@ -10,6 +10,7 @@ import com.project.json2sql.dto.MainJson;
 import com.project.json2sql.model.AuditProperties;
 import com.project.json2sql.model.ConfigProperties;
 import com.project.json2sql.model.OwnerDetails;
+import com.project.json2sql.model.OwnerProcess;
 import com.project.json2sql.model.ProcessScheduleJson;
 import com.project.json2sql.model.Properties;
 
@@ -31,7 +32,7 @@ public interface ProcessService {
 
 	ConfigProperties fetchConfigProp();
 
-	ConfigProperties setConfigDetails(ConfigProperties configObj);
+	ConfigProperties setConfigDetails(ConfigurationDto configDtoObj);
 
 	List<ProcessScheduleJson> getAllFileList(int pageLimit, int offset);
 
@@ -47,10 +48,14 @@ public interface ProcessService {
 
 	int getOwnerCount();
 
-	String getExecuteProxy(ConfigurationDto configDtoObj);
+	String getExecuteProxy();
 
 	void multiThreadExecuteProxy(ConfigurationDto configDtoObj) throws Exception;
 
 	void stopMultiThreadExecuteProxy() throws InterruptedException;
+
+	void addProcessID(String id);
+
+	List<OwnerProcess> getProcessFailedData(int pageLimit, int offset);
 
 }

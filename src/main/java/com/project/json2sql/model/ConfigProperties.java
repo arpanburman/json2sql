@@ -16,29 +16,26 @@ public class ConfigProperties {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private long id;
 	
-	@Column(name="port")
-	private String port;
-	
-	@Column(name="host")
-	private String host;
+	@Column(name="authorization")
+	private String authorization;
 	
 	@Column(name="url")
 	private String url;
 	
-	@Column(name="contentType")
-	private String contentType;
+	@Column(name="time")
+	private String time;
 	
-	@Column(name="charset")
-	private String charset;
+	@Column(name="frequency")
+	private String frequency;
 	
-	@Column(name="authorization")
-	private String authorization;
+	@Column(name="op")
+	private String op;
 	
-	@Column(name="accept")
-	private String accept;
+	@Column(name="sid")
+	private String sid;
 	
-	@Column(name="acceptEncoding")
-	private String acceptEncoding;
+	@Column(name="uid")
+	private String uid;
 
 	public long getId() {
 		return id;
@@ -46,38 +43,6 @@ public class ConfigProperties {
 
 	public void setId(long id) {
 		this.id = id;
-	}
-
-	public String getPort() {
-		return port;
-	}
-
-	public void setPort(String port) {
-		this.port = port;
-	}
-
-	public String getHost() {
-		return host;
-	}
-
-	public void setHost(String host) {
-		this.host = host;
-	}
-
-	public String getUrl() {
-		return url;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
-	}
-
-	public String getContentType() {
-		return contentType;
-	}
-
-	public void setContentType(String contentType) {
-		this.contentType = contentType;
 	}
 
 	public String getAuthorization() {
@@ -88,29 +53,53 @@ public class ConfigProperties {
 		this.authorization = authorization;
 	}
 
-	public String getAccept() {
-		return accept;
+	public String getUrl() {
+		return url;
 	}
 
-	public void setAccept(String accept) {
-		this.accept = accept;
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
-	public String getAcceptEncoding() {
-		return acceptEncoding;
+	public String getTime() {
+		return time;
 	}
 
-	public void setAcceptEncoding(String acceptEncoding) {
-		this.acceptEncoding = acceptEncoding;
+	public void setTime(String time) {
+		this.time = time;
 	}
 
-	public String getCharset() {
-		return charset;
+	public String getFrequency() {
+		return frequency;
 	}
 
-	public void setCharset(String charset) {
-		this.charset = charset;
+	public void setFrequency(String frequency) {
+		this.frequency = frequency;
 	}
 
-	
+	public String getOp() {
+		return op;
+	}
+
+	public void setOp(String op) {
+		this.op = op;
+	}
+
+	public String getSid() {
+		return sid;
+	}
+
+	public void setSid(String sid) {
+		this.sid = sid;
+	}
+
+	public String getUid() {
+		return uid;
+	}
+
+	public void setUid(String uid) {
+		this.uid = uid;
+	}
+
+	    
 }

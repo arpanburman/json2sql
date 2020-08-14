@@ -17,31 +17,39 @@
 
 	//Controller Part
 	app.controller("UserManagementController", function($scope, $http) {
-		_refreshPageData();
 
-		$scope.submitConfig = function(accept, acceptEncoding, port, host, proxyurl, contentType, charset, authorization) {
+		$scope.offset = 0;
+		$scope.count = 0;
+		$scope.owners = [];
+		$scope.form = {
+			id : ""
+		};
+		
+		_refreshPageData();
+		_refreshTableData();
+
+		$scope.submitConfig = function(authorization, op, sid, uid, url, time,
+				frequency) {
 			var method = "POST";
-			var url = 'json2sql/setConfigDetails/';
 			var data = {
-					id: 1,
-					port: port,
-					host: host,
-					url: proxyurl,
-					contentType: contentType,
-					charset: charset,
-					authorization: authorization,
-					accept: accept,
-					acceptEncoding: acceptEncoding
+				authorization : authorization,
+				op : op,
+				sid : sid,
+				uid : uid,
+				url : url,
+				time : time,
+				frequency : frequency
 			};
 			$http({
 				method : method,
-				url : url,
+				url : 'json2sql/setConfigDetails/',
 				data : JSON.stringify(data),
 				headers : {
 					'Content-Type' : 'application/json'
 				}
 			}).then(function successCallback(response) {
 				$scope.config = response.data;
+				alert("Configuration Processed");
 			}, function errorCallback(response) {
 				console.log(response.statusText);
 			});
@@ -55,6 +63,67 @@
 				url : 'json2sql/configDetails'
 			}).then(function successCallback(response) {
 				$scope.config = response.data;
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+
+		function _refreshTableData() {
+			$http({
+				method : 'GET',
+				url : 'json2sql/getProcessFailedData/' + $scope.offset
+			}).then(function successCallback(response) {
+				$scope.ownerProcesses = response.data;
+				$scope.count= $scope.ownerProcesses.length;
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
+		$scope.nextOffset = function() {
+			if ($scope.offset <= $scope.count) {
+				$scope.offset = $scope.offset + 50;
+				_refreshTableData();
+			}
+		}
+		$scope.prevOffset = function() {
+			if ($scope.offset >= 0) {
+				$scope.offset = $scope.offset - 50;
+				_refreshTableData();
+			}
+		}
+		
+		$scope.submitID = function(id) {
+			$http({
+				method : 'GET',
+				url : 'json2sql/addProcessID/' + id
+			}).then(function successCallback(response) {
+				alert("ID Processed");
+				_refreshTableData();
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
+		$scope.startProcess = function() {
+			$http({
+				method : 'POST',
+				url : 'json2sql/startExecuteProxy/'
+			}).then(function successCallback(response) {
+				alert("Processed");
+				_refreshTableData();
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
+		$scope.stopProcess = function() {
+			$http({
+				method : 'POST',
+				url : 'json2sql/stopExecuteProxy/'
+			}).then(function successCallback(response) {
+				alert("Process Stop");
+				_refreshTableData();
 			}, function errorCallback(response) {
 				console.log(response.statusText);
 			});
@@ -146,8 +215,7 @@ footer {
 				<ul class="nav navbar-nav">
 					<li><a href="index.html">Home</a></li>
 					<li><a href="propertyList.html">Property List</a></li>
-					<li><a href="auditPropertyList.html">Audit Property
-							List</a></li>
+					<li><a href="auditPropertyList.html">Audit Property List</a></li>
 					<li><a href="ownerList.html">Owner List</a></li>
 					<li class="active"><a href="configProxy.html">Configure
 							Proxy</a></li>
@@ -173,50 +241,94 @@ footer {
 			<div class="col-sm-8 text-centre">
 				<div class="card text-primary border-primary border-right-0">
 					<div class="card-body">
-						<form >
-							<div class="form-group">
-								<label for="exampleInputEmail1">Accept</label> <input
-									class="form-control form-control-sm" type="text"
-									placeholder="Accept Value" ng-model="config.accept">
-							</div>
-							<div class="form-group">
-								<label for="exampleInputEmail1">Accept Encoding</label> <input
-									class="form-control form-control-sm" type="text"
-									placeholder="Accept Encoding Value" ng-model="config.acceptEncoding">
-							</div>
+						<form>
 							<div class="form-group">
 								<label for="exampleInputEmail1">Authorization</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Authorization value" ng-model="config.authorization">
+									placeholder="Authorization value"
+									ng-model="config.authorization">
 							</div>
 							<div class="form-group">
-								<label for="exampleInputEmail1">Charset</label> <input
+								<label for="exampleInputEmail1">Op</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Charset Value" ng-model="config.charset">
+									placeholder="OP Value" ng-model="config.op">
 							</div>
 							<div class="form-group">
-								<label for="exampleInputEmail1">Content Type</label> <input
+								<label for="exampleInputEmail1">SID</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Content Type Value" ng-model="config.contentType">
+									placeholder="SID Value" ng-model="config.sid">
 							</div>
 							<div class="form-group">
-								<label for="exampleInputEmail1">Host</label> <input
+								<label for="exampleInputEmail1">UID</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Host Value" ng-model="config.host">
-							</div>
-							<div class="form-group">
-								<label for="exampleInputEmail1">Port</label> <input
-									class="form-control form-control-sm" type="text"
-									placeholder="Port Value" ng-model="config.port">
+									placeholder="UID Value" ng-model="config.uid">
 							</div>
 							<div class="form-group">
 								<label for="exampleInputEmail1">URL</label> <input
 									class="form-control form-control-sm" type="text"
 									placeholder="URL Value" ng-model="config.url">
 							</div>
-							<button type="submit" class="btn btn-primary btn-large center" 
-							ng-click="submitConfig(config.accept, config.acceptEncoding, config.port, config.host, config.url, config.contentType, config.charset, config.authorization)">Submit</button>
+							<div class="form-group">
+								<label for="exampleInputEmail1">Time Limit</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="Time Limit Value" ng-model="config.time">
+							</div>
+							<div class="form-group">
+								<label for="exampleInputEmail1">Frequency</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="Frequency Value" ng-model="config.frequency">
+							</div>
+
+							<button type="submit" class="btn btn-primary btn-large center"
+								ng-click="submitConfig(config.authorization, config.op, config.sid, config.uid, config.url, config.time, config.frequency)">Save
+								Configuration</button>
 						</form>
+						<hr>
+						<button type="submit" class="btn btn-primary btn-large center"
+							ng-click="startProcess()">Start Process</button>
+						<button type="submit" class="btn btn-primary btn-large center"
+							ng-click="stopProcess()">Stop Process</button>
+						<hr>
+						<form>
+							<div class="form-group">
+								<label for="exampleInputEmail1">Submit ID for Process</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="Submit Id Here" ng-model="new.id">
+							</div>
+
+							<button type="submit" class="btn btn-primary btn-large center"
+								ng-click="submitID(new.id)">Sumbit Id</button>
+						</form>
+						<hr>
+						<div class="card-body">
+							<h3>Failed Process Shows Below:</h3>
+							<ul class="pager">
+								<li class="previous"><button type="button"
+										class="btn btn-primary" ng-click="prevOffset()">Previous</button></li>
+								<li class="next"><button type="button"
+										class="btn btn-primary" ng-click="nextOffset()">Next</button></li>
+							</ul>
+							<table class="table table-striped">
+								<tr>
+									<th>ID</th>
+									<th>Created Date</th>
+									<th>Is Process</th>
+									<th>Process Code</th>
+									<th>Process Error</th>
+								</tr>
+
+								<tr ng-repeat="ownerProcess in ownerProcesses | filter:search">
+									<td>{{ ownerProcess.id }}</td>
+									<td>{{ ownerProcess.createdDate }}</td>
+									<td>{{ ownerProcess.isProcess }}</td>
+									<td>{{ ownerProcess.processCode }}</td>
+									<td>{{ ownerProcess.processError }}</td>
+								</tr>
+
+							</table>
+							<button type="submit" class="btn btn-primary btn-large center"
+								ng-click="runProcess">Run Failed Process</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -230,8 +342,5 @@ footer {
 			</div>
 		</div>
 	</div>
-	<footer class="container-fluid text-center">
-		<p>Copy Right Protected</p>
-	</footer>
 </body>
 </html>

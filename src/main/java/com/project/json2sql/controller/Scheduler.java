@@ -23,9 +23,9 @@ public class Scheduler {
       schedulerService.processJsonUploadJob();
    }
 	
-	@Scheduled(cron="0/1 * 10-17 * * ?")
+	/*@Scheduled(cron="0/1 * 10-17 * * ?")
 	public void cronJobSchOwner() {
       System.out.println("Owner cron job expression:: " + DateUtil.getCurrentDateTime());
       ownerSchedulerService.ownerJsonUploadJob();
-   }
+   }*/
 }

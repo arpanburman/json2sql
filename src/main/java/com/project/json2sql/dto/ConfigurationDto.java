@@ -9,6 +9,8 @@ public class ConfigurationDto {
 	private String uid;
 	private String url;
 	private String authorization;
+	private String time;
+	private String frequency;
 	public String getOp() {
 		return op;
 	}
@@ -38,6 +40,18 @@ public class ConfigurationDto {
 	}
 	public void setAuthorization(String authorization) {
 		this.authorization = authorization;
+	}
+	public String getTime() {
+		return time;
+	}
+	public void setTime(String time) {
+		this.time = time;
+	}
+	public String getFrequency() {
+		return frequency;
+	}
+	public void setFrequency(String frequency) {
+		this.frequency = frequency;
 	}
 	
 	

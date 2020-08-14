@@ -27,6 +27,7 @@ import com.project.json2sql.dto.ConfigurationDto;
 import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.model.ConfigProperties;
 import com.project.json2sql.model.OwnerDetails;
+import com.project.json2sql.model.OwnerProcess;
 import com.project.json2sql.service.ProcessService;
 
 import io.swagger.annotations.ApiOperation;
@@ -61,10 +62,10 @@ public class OwnerController {
 
 	@PostMapping("/setConfigDetails")
 	@ResponseBody
-	public ResponseEntity<?> setConfigDetails(@RequestBody ConfigProperties configObj) {
+	public ResponseEntity<?> setConfigDetails(@RequestBody ConfigurationDto configDtoObj) {
 		ConfigProperties cofigObj = new ConfigProperties();
 		try {
-			cofigObj = processService.setConfigDetails(configObj);
+			cofigObj = processService.setConfigDetails(configDtoObj);
 			return ResponseEntity.status(HttpStatus.OK).body(cofigObj);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
@@ -156,12 +157,12 @@ public class OwnerController {
 
 	@PostMapping("/getExecuteProxy")
 	@ResponseBody
-	public ResponseEntity<?> getExecuteProxy(@RequestBody ConfigurationDto configDtoObj) {
+	public ResponseEntity<?> getExecuteProxy() {
 		logger.info("Process Start");
 		OwnerDetails ownerDetailsObj = new OwnerDetails();
 		String status = "N";
 		try {
-			status = processService.getExecuteProxy(configDtoObj);
+			status = processService.getExecuteProxy();
 			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
@@ -191,6 +192,32 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.OK).build();
 		} catch (Exception ex) {
 			logger.error("Error Occured while stopExecuteProxy");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/addProcessID/{id}")
+	@ResponseBody
+	public ResponseEntity<?> addProcessID(@PathVariable String id) {
+		logger.info("Add Process ID");
+		try {
+			processService.addProcessID(id);
+			return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\"Success\"}");
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/getProcessFailedData/{offset}")
+	@ResponseBody
+	public ResponseEntity<?> getProcessFailedData(@PathVariable int offset) {
+		List<OwnerProcess> OwnerProcessObjList = new ArrayList<>();
+		try {
+			OwnerProcessObjList = processService.getProcessFailedData(pageLimit, offset);
+			return ResponseEntity.status(HttpStatus.OK).body(OwnerProcessObjList);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
