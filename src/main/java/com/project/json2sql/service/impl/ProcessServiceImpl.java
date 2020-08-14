@@ -14,6 +14,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -57,11 +61,14 @@ import com.project.json2sql.repository.PropertiesRepository;
 import com.project.json2sql.repository.SchedulerRepository;
 import com.project.json2sql.repository.SummaryRepository;
 import com.project.json2sql.service.ProcessService;
+import com.project.json2sql.tasks.ExecuteProxyTask;
 import com.project.json2sql.util.DateUtil;
 import com.project.json2sql.util.ProxyCall;
 
 @Service
-public class ProcessServiceImpl implements ProcessService{
+public class ProcessServiceImpl implements ProcessService {
+
+	private static final int THREAD_POOL_VALUE = 1;
 
 	@Value("${localUploadPath}")
 	private String localUploadPath;
@@ -95,21 +102,23 @@ public class ProcessServiceImpl implements ProcessService{
 
 	@Autowired
 	OwnerProcessRepository ownerProcessRepository;
-	
+
+	private ScheduledExecutorService service;
+
 	public static final Logger logger = LoggerFactory.getLogger(ProcessServiceImpl.class);
 
 	public String startProcess(MainJson jsonObj) {
 		String isProcess = "N";
 		try {
 			ProcessJson processJson = new ProcessJson();
-			String path = writeInFile(jsonObj.toString(), localUploadPath); 
-			logger.info("Stored File Path::"+path);
+			String path = writeInFile(jsonObj.toString(), localUploadPath);
+			logger.info("Stored File Path::" + path);
 			processJson.setFilePath(path);
 			processJson.setStatus(jsonObj.getResponse().getStatus());
 			processJson.setCreatedDate(DateUtil.getCurrentDateTime());
 			processJson.setCreatedBy("System");
 			processJson = processRepository.save(processJson);
-			if(processJson.getProcessId()!=0) {
+			if (processJson.getProcessId() != 0) {
 				SummaryDto summaryDtoObj = jsonObj.getResponse().getResult().getSummary();
 				PagesDto pagesDtoObj = jsonObj.getResponse().getResult().getPages();
 				Summary summaryObj = new Summary();
@@ -129,13 +138,13 @@ public class ProcessServiceImpl implements ProcessService{
 
 				List<PropertyDto> propertyDtoListObj = jsonObj.getResponse().getResult().getProperties();
 				List<Properties> PropertiesListObj = new ArrayList<Properties>();
-				logger.info("Property Count ::"+propertyDtoListObj.size());
-				for(PropertyDto propertyDtoObj : propertyDtoListObj) {
-					//Check properties already available or not
+				logger.info("Property Count ::" + propertyDtoListObj.size());
+				for (PropertyDto propertyDtoObj : propertyDtoListObj) {
+					// Check properties already available or not
 					List<Properties> propObj = getPropertiesById(propertyDtoObj.getId().toString());
-					if(propObj.size()>0) {
+					if (propObj.size() > 0) {
 						logger.info(":::::::Property already available, update required::::::::");
-						//Update Property table in Audit table
+						// Update Property table in Audit table
 						AuditProperties auditPropertiesObj = new AuditProperties();
 
 						auditPropertiesObj.setPropertiesId(propObj.get(0).getPropertiesId());
@@ -203,7 +212,7 @@ public class ProcessServiceImpl implements ProcessService{
 						auditPropertiesObj.setIsActive("Y");
 						auditPropertiesRepository.updateStatus(propObj.get(0).getId().toString(), "N");
 						auditPropertiesObj = auditPropertiesRepository.save(auditPropertiesObj);
-						//Update Property table in main table
+						// Update Property table in main table
 						Properties propertiesObj = new Properties();
 						propertiesObj.setPropertiesId(propObj.get(0).getPropertiesId());
 						propertiesObj.setType(propertyDtoObj.getType());
@@ -272,7 +281,7 @@ public class ProcessServiceImpl implements ProcessService{
 						propertiesObj = propertiesRepository.save(propertiesObj);
 
 						PropertiesListObj.add(propertiesObj);
-					}else {
+					} else {
 						logger.info(":::::::Property Insert required::::::::");
 						Properties propertiesObj = new Properties();
 						propertiesObj.setType(propertyDtoObj.getType());
@@ -345,12 +354,10 @@ public class ProcessServiceImpl implements ProcessService{
 			}
 		} catch (Exception e) {
 			isProcess = "N";
-			logger.error("File not Saved Properly::: "+e);
+			logger.error("File not Saved Properly::: " + e);
 		}
 		return isProcess;
 	}
-
-
 
 	public static String fileSuffix() {
 		String fileSuffix = new SimpleDateFormat("ddMMyyyyHHmmss").format(new Date());
@@ -358,18 +365,16 @@ public class ProcessServiceImpl implements ProcessService{
 	}
 
 	public static String writeInFile(String Value, String localUploadPath) {
-		String uuid =  UUID.randomUUID().toString();
-		String path= localUploadPath+ uuid+fileSuffix()+".json";
-		logger.info("Stored Path:: "+path);
+		String uuid = UUID.randomUUID().toString();
+		String path = localUploadPath + uuid + fileSuffix() + ".json";
+		logger.info("Stored Path:: " + path);
 		try {
 			Files.write(Paths.get(path), Value.getBytes());
 		} catch (Exception e) {
-			logger.error("File can't Write:"+e);
+			logger.error("File can't Write:" + e);
 		}
 		return path;
 	}
-
-
 
 	@Override
 	public OwnerDetails startProxyProcess(InputProxyDto inputObj) {
@@ -377,13 +382,13 @@ public class ProcessServiceImpl implements ProcessService{
 		AuditOwnerDetails auditOwnerDetails = new AuditOwnerDetails();
 		ConfigProperties configPropertiesObj = configPropertiesRepository.fetchById(1);
 		try {
-			if(null != configPropertiesObj) {
+			if (null != configPropertiesObj) {
 				Root rootObj = ProxyCall.callProxy(configPropertiesObj, inputObj);
 
-				if(rootObj != null) {
-					List<OwnerDetails> ownerDetailsListOldObj = ownerDetailsRepository.fetchById(inputObj.getId()+"");
-					if(ownerDetailsListOldObj.size()>0) {
-						//Audit table transfer
+				if (rootObj != null) {
+					List<OwnerDetails> ownerDetailsListOldObj = ownerDetailsRepository.fetchById(inputObj.getId() + "");
+					if (ownerDetailsListOldObj.size() > 0) {
+						// Audit table transfer
 						auditOwnerDetails.setFirstName(ownerDetailsListOldObj.get(0).getFirstName());
 						auditOwnerDetails.setLastName(ownerDetailsListOldObj.get(0).getLastName());
 						auditOwnerDetails.setOwnerAddress(ownerDetailsListOldObj.get(0).getOwnerAddress());
@@ -397,21 +402,29 @@ public class ProcessServiceImpl implements ProcessService{
 						auditOwnerDetailsRepository.save(auditOwnerDetails);
 
 						ownerDetailsObj.setOwnerId(ownerDetailsListOldObj.get(0).getOwnerId());
-						ownerDetailsObj.setFirstName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
-						ownerDetailsObj.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
-						ownerDetailsObj.setOwnerAddress(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
-						ownerDetailsObj.setOwnerName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
+						ownerDetailsObj.setFirstName(
+								rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
+						ownerDetailsObj
+								.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
+						ownerDetailsObj.setOwnerAddress(
+								rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
+						ownerDetailsObj.setOwnerName(
+								rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
 						ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
 						ownerDetailsObj.setId(inputObj.getId().toString());
 						ownerDetailsObj.setCreatedDate(DateUtil.getCurrentDateTime());
 						ownerDetailsObj.setCreatedBy("System");
 						ownerDetailsObj.setIsActive("Y");
 						ownerDetailsRepository.save(ownerDetailsObj);
-					}else {
-						ownerDetailsObj.setFirstName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
-						ownerDetailsObj.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
-						ownerDetailsObj.setOwnerAddress(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
-						ownerDetailsObj.setOwnerName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
+					} else {
+						ownerDetailsObj.setFirstName(
+								rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
+						ownerDetailsObj
+								.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
+						ownerDetailsObj.setOwnerAddress(
+								rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
+						ownerDetailsObj.setOwnerName(
+								rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
 						ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
 						ownerDetailsObj.setId(inputObj.getId().toString());
 						ownerDetailsObj.setCreatedDate(DateUtil.getCurrentDateTime());
@@ -423,12 +436,10 @@ public class ProcessServiceImpl implements ProcessService{
 			}
 
 		} catch (Exception e) {
-			logger.error("Error in Proxy Service"+e);
+			logger.error("Error in Proxy Service" + e);
 		}
 		return ownerDetailsObj;
 	}
-
-
 
 	@Override
 	public List<Properties> fetchProperties() {
@@ -436,7 +447,7 @@ public class ProcessServiceImpl implements ProcessService{
 		try {
 			propObj = (List<Properties>) propertiesRepository.findAll();
 		} catch (Exception e) {
-			logger.error("Error in Property Fetch Service"+e);
+			logger.error("Error in Property Fetch Service" + e);
 		}
 		return propObj;
 	}
@@ -447,12 +458,10 @@ public class ProcessServiceImpl implements ProcessService{
 		try {
 			propObj = (List<Properties>) propertiesRepository.fetchById(id);
 		} catch (Exception e) {
-			logger.error("Error in Property Upload Service"+e);
+			logger.error("Error in Property Upload Service" + e);
 		}
 		return propObj;
 	}
-
-
 
 	@Override
 	public int getPropertiesCount() {
@@ -460,15 +469,13 @@ public class ProcessServiceImpl implements ProcessService{
 		return count;
 	}
 
-
-
 	@Override
 	public List<Properties> getPropertiesPager(String offset) {
 		List<Properties> propObj = new ArrayList<>();
 		try {
-			//propObj = (List<Properties>) propertiesRepository.getPropertiesPager(offset);
+			// propObj = (List<Properties>) propertiesRepository.getPropertiesPager(offset);
 		} catch (Exception e) {
-			logger.error("Error in Property Fetch Service"+e);
+			logger.error("Error in Property Fetch Service" + e);
 		}
 		return propObj;
 	}
@@ -481,13 +488,11 @@ public class ProcessServiceImpl implements ProcessService{
 			Pageable pageable = new OffsetBasedPageRequest(limit, offset);
 			propObj = propertiesJpaRepository.findAll(pageable).getContent();
 		} catch (Exception e) {
-			logger.error("Error in Property Fetch Service"+e);
+			logger.error("Error in Property Fetch Service" + e);
 		}
 
 		return propObj;
 	}
-
-
 
 	@Override
 	public ConfigProperties fetchConfigProp() {
@@ -495,12 +500,10 @@ public class ProcessServiceImpl implements ProcessService{
 		try {
 			cofigObj = configPropertiesRepository.fetchById(1);
 		} catch (Exception e) {
-			logger.error("Error in Config prop Fetch Service"+e);
+			logger.error("Error in Config prop Fetch Service" + e);
 		}
 		return cofigObj;
 	}
-
-
 
 	@Override
 	public ConfigProperties setConfigDetails(ConfigProperties configObj) {
@@ -509,12 +512,10 @@ public class ProcessServiceImpl implements ProcessService{
 			cofigPropObj.setId(1);
 			cofigPropObj = configPropertiesRepository.save(configObj);
 		} catch (Exception e) {
-			logger.error("Error in Config prop Save Service"+e);
+			logger.error("Error in Config prop Save Service" + e);
 		}
 		return cofigPropObj;
 	}
-
-
 
 	@Override
 	public List<ProcessScheduleJson> getAllFileList(int pageLimit, int offset) {
@@ -524,12 +525,10 @@ public class ProcessServiceImpl implements ProcessService{
 			Pageable pageable = new OffsetBasedPageRequest(pageLimit, offset);
 			fileObjList = schedulerRepository.findAll(pageable).getContent();
 		} catch (Exception e) {
-			logger.error("Error in Property Fetch Service"+e);
+			logger.error("Error in Property Fetch Service" + e);
 		}
 		return fileObjList;
 	}
-
-
 
 	@Override
 	public List<AuditProperties> getAllAuditProperties(int pageLimit, int offset) {
@@ -539,12 +538,10 @@ public class ProcessServiceImpl implements ProcessService{
 			Pageable pageable = new OffsetBasedPageRequest(pageLimit, offset);
 			propObj = auditPropertiesRepository.findAll(pageable).getContent();
 		} catch (Exception e) {
-			logger.error("Error in Property Fetch Service"+e);
+			logger.error("Error in Property Fetch Service" + e);
 		}
 		return propObj;
 	}
-
-
 
 	@Override
 	public List<AuditProperties> getAuditPropertiesById(String id) {
@@ -552,12 +549,10 @@ public class ProcessServiceImpl implements ProcessService{
 		try {
 			propObj = (List<AuditProperties>) auditPropertiesRepository.fetchById(id, "Y");
 		} catch (Exception e) {
-			logger.error("Error in Property Upload Service"+e);
+			logger.error("Error in Property Upload Service" + e);
 		}
 		return propObj;
 	}
-
-
 
 	@Override
 	public List<OwnerDetails> getAllOwners(int pageLimit, int offset) {
@@ -567,12 +562,10 @@ public class ProcessServiceImpl implements ProcessService{
 			Pageable pageable = new OffsetBasedPageRequest(pageLimit, offset);
 			ownerObjList = ownerDetailsRepository.findAll(pageable).getContent();
 		} catch (Exception e) {
-			logger.error("Error in Property Fetch Service"+e);
+			logger.error("Error in Property Fetch Service" + e);
 		}
 		return ownerObjList;
 	}
-
-
 
 	@Override
 	public List<OwnerDetails> getOwnerById(String id) {
@@ -580,37 +573,34 @@ public class ProcessServiceImpl implements ProcessService{
 		try {
 			ownerObjList = (List<OwnerDetails>) ownerDetailsRepository.fetchById(id);
 		} catch (Exception e) {
-			logger.error("Error in Property Upload Service"+e);
+			logger.error("Error in Property Upload Service" + e);
 		}
 		return ownerObjList;
 	}
 
-
-
 	@Override
 	public Map<Object, ValueDifference<Object>> getDiff(String id) {
 		ObjectMapper mapper = new ObjectMapper();
-		List<AuditProperties> auditpropObj = (List<AuditProperties>) auditPropertiesRepository.fetchById(id,"Y");
+		List<AuditProperties> auditpropObj = (List<AuditProperties>) auditPropertiesRepository.fetchById(id, "Y");
 		List<Properties> propObj = getPropertiesById(id);
 		Map<Object, ValueDifference<Object>> diffObj = null;
 		try {
 			String json1 = mapper.writeValueAsString(auditpropObj.get(0));
 			String json2 = mapper.writeValueAsString(propObj.get(0));
 			Gson g = new Gson();
-			Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
+			Type mapType = new TypeToken<Map<String, Object>>() {
+			}.getType();
 			Map<String, Object> firstMap = g.fromJson(json1, mapType);
 			Map<String, Object> secondMap = g.fromJson(json2, mapType);
 			MapDifference<Object, Object> objMap = Maps.difference(firstMap, secondMap);
 			diffObj = objMap.entriesDiffering();
 			System.out.println(Maps.difference(firstMap, secondMap));
 			System.out.println(diffObj);
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return diffObj;
 	}
-
-
 
 	@Override
 	public int getOwnerCount() {
@@ -618,30 +608,29 @@ public class ProcessServiceImpl implements ProcessService{
 		return count;
 	}
 
-
-
 	@Override
 	public String getExecuteProxy(ConfigurationDto configDtoObj) {
 		OwnerDetails ownerDetailsObj = new OwnerDetails();
 		AuditOwnerDetails auditOwnerDetails = new AuditOwnerDetails();
-		//ConfigProperties configPropertiesObj = configPropertiesRepository.fetchById(1);
+		// ConfigProperties configPropertiesObj =
+		// configPropertiesRepository.fetchById(1);
 		String status = "N";
 		try {
-			if(null != configDtoObj) {
-				//Set input object
+			if (null != configDtoObj) {
+				// Set input object
 				List<Properties> propObjList = propertiesJpaRepository.findAll();
-				if(propObjList.size()>0) {
-					for(Properties propObj:propObjList) {
+				if (propObjList.size() > 0) {
+					for (Properties propObj : propObjList) {
 						InputProxyDto inputObj = new InputProxyDto();
 						OwnerProcess ownerProcess = new OwnerProcess();
-						
+
 						inputObj.setOp(configDtoObj.getOp());
 						inputObj.setSid(configDtoObj.getSid());
 						inputObj.setUid(configDtoObj.getUid());
 						inputObj.setLoc("AU");
 						inputObj.setAppCode("rppandroid");
 						inputObj.setId(Integer.parseInt(propObj.getId()));
-						
+
 						ownerProcess.setId(propObj.getId());
 						ownerProcess.setCreatedDate(DateUtil.getCurrentDateTime());
 						ownerProcess.setCreatedBy("System");
@@ -649,10 +638,11 @@ public class ProcessServiceImpl implements ProcessService{
 
 						Root rootObj = callProxy(configDtoObj, inputObj, ownerProcess);
 
-						if(rootObj != null) {
-							List<OwnerDetails> ownerDetailsListOldObj = ownerDetailsRepository.fetchById(inputObj.getId()+"");
-							if(ownerDetailsListOldObj.size()>0) {
-								//Audit table transfer
+						if (rootObj != null) {
+							List<OwnerDetails> ownerDetailsListOldObj = ownerDetailsRepository
+									.fetchById(inputObj.getId() + "");
+							if (ownerDetailsListOldObj.size() > 0) {
+								// Audit table transfer
 								auditOwnerDetails.setFirstName(ownerDetailsListOldObj.get(0).getFirstName());
 								auditOwnerDetails.setLastName(ownerDetailsListOldObj.get(0).getLastName());
 								auditOwnerDetails.setOwnerAddress(ownerDetailsListOldObj.get(0).getOwnerAddress());
@@ -662,14 +652,19 @@ public class ProcessServiceImpl implements ProcessService{
 								auditOwnerDetails.setCreatedBy(ownerDetailsListOldObj.get(0).getCreatedBy());
 								auditOwnerDetails.setCreatedDate(ownerDetailsListOldObj.get(0).getCreatedDate());
 								auditOwnerDetails.setIsActive("Y");
-								auditOwnerDetailsRepository.updateStatus(ownerDetailsListOldObj.get(0).getId().toString(), "N");
+								auditOwnerDetailsRepository
+										.updateStatus(ownerDetailsListOldObj.get(0).getId().toString(), "N");
 								auditOwnerDetailsRepository.save(auditOwnerDetails);
 
 								ownerDetailsObj.setOwnerId(ownerDetailsListOldObj.get(0).getOwnerId());
-								ownerDetailsObj.setFirstName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
-								ownerDetailsObj.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
-								ownerDetailsObj.setOwnerAddress(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
-								ownerDetailsObj.setOwnerName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
+								ownerDetailsObj.setFirstName(
+										rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
+								ownerDetailsObj.setLastName(
+										rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
+								ownerDetailsObj.setOwnerAddress(
+										rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
+								ownerDetailsObj.setOwnerName(
+										rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
 								ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
 								ownerDetailsObj.setId(inputObj.getId().toString());
 								ownerDetailsObj.setCreatedDate(DateUtil.getCurrentDateTime());
@@ -677,12 +672,16 @@ public class ProcessServiceImpl implements ProcessService{
 								ownerDetailsObj.setIsActive("Y");
 								ownerDetailsRepository.save(ownerDetailsObj);
 								status = "Y";
-								
-							}else {
-								ownerDetailsObj.setFirstName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
-								ownerDetailsObj.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
-								ownerDetailsObj.setOwnerAddress(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
-								ownerDetailsObj.setOwnerName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
+
+							} else {
+								ownerDetailsObj.setFirstName(
+										rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
+								ownerDetailsObj.setLastName(
+										rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
+								ownerDetailsObj.setOwnerAddress(
+										rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
+								ownerDetailsObj.setOwnerName(
+										rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
 								ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
 								ownerDetailsObj.setId(inputObj.getId().toString());
 								ownerDetailsObj.setCreatedDate(DateUtil.getCurrentDateTime());
@@ -698,81 +697,115 @@ public class ProcessServiceImpl implements ProcessService{
 
 		} catch (Exception e) {
 			status = "N";
-			logger.error("Error in Proxy Service"+e);
+			logger.error("Error in Proxy Service" + e);
 		}
 		return status;
 	}
-	
-	public Root callProxy(ConfigurationDto configDtoObj, InputProxyDto inputObj, OwnerProcess ownerProcess) throws Exception {
+
+	public Root callProxy(ConfigurationDto configDtoObj, InputProxyDto inputObj, OwnerProcess ownerProcess)
+			throws Exception {
 		Root rootObj = new Root();
 		URL u = new URL(configDtoObj.getUrl());
-		HttpURLConnection conn = (HttpURLConnection)u.openConnection();
+		HttpURLConnection conn = (HttpURLConnection) u.openConnection();
 		OwnerProcess ownerProcessObj = ownerProcess;
 		try {
-			/*Properties systemSettings = System.getProperties();
-			systemSettings.put("proxySet", "true");
-			systemSettings.put("http.proxyHost", configPropertiesObj.getHost());
-			systemSettings.put("http.proxyPort", configPropertiesObj.getPort());*/
+			/*
+			 * Properties systemSettings = System.getProperties();
+			 * systemSettings.put("proxySet", "true"); systemSettings.put("http.proxyHost",
+			 * configPropertiesObj.getHost()); systemSettings.put("http.proxyPort",
+			 * configPropertiesObj.getPort());
+			 */
 
-			conn.setDoOutput( true );
-			conn.setInstanceFollowRedirects( false );
-			conn.setRequestMethod( "POST" );
-			conn.setRequestProperty( "Content-Type", "application/json"); 
-			conn.setRequestProperty( "charset", "utf-8");
-			conn.setRequestProperty( "Authorization", configDtoObj.getAuthorization());
-			conn.setRequestProperty( "Accept", "application/json");
-			conn.setRequestProperty( "Accept-Encoding", "gzip");
-			conn.setRequestProperty( "Cache-Control", "no-cache");
-			//conn.setRequestProperty( "User-Agent", "");
-			conn.setUseCaches( false );
+			conn.setDoOutput(true);
+			conn.setInstanceFollowRedirects(false);
+			conn.setRequestMethod("POST");
+			conn.setRequestProperty("Content-Type", "application/json");
+			conn.setRequestProperty("charset", "utf-8");
+			conn.setRequestProperty("Authorization", configDtoObj.getAuthorization());
+			conn.setRequestProperty("Accept", "application/json");
+			conn.setRequestProperty("Accept-Encoding", "gzip");
+			conn.setRequestProperty("Cache-Control", "no-cache");
+			// conn.setRequestProperty( "User-Agent", "");
+			conn.setUseCaches(false);
 			conn.setDoOutput(true);
 			conn.setDoInput(true);
 			conn.setConnectTimeout(5000);
 
-			//conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+			// conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
 
-			OutputStream out = conn.getOutputStream(); 
-			//out.write(inputObj.toString().getBytes()); 
+			OutputStream out = conn.getOutputStream();
+			// out.write(inputObj.toString().getBytes());
 			out.write(inputObj.toString().getBytes("UTF-8"));
 			out.close();
-			
+
 			// read the response
-			/*InputStream ip = conn.getInputStream(); 
-			BufferedReader br1 = new BufferedReader(new InputStreamReader(ip)); */
-			
+			/*
+			 * InputStream ip = conn.getInputStream(); BufferedReader br1 = new
+			 * BufferedReader(new InputStreamReader(ip));
+			 */
+
 			InputStream in = new BufferedInputStream(conn.getInputStream());
-            String result = IOUtils.toString(in, "UTF-8");
-            /*JSONParser parser = new JSONParser(); 
-            JSONObject json = (JSONObject) parser. parse(result);*/
-            
-            Gson g = new Gson(); 
-            rootObj = g.fromJson(result, Root.class);
-            		
-            //JSONObject jsonObject = new JSONObject(result);
-			
+			String result = IOUtils.toString(in, "UTF-8");
+			/*
+			 * JSONParser parser = new JSONParser(); JSONObject json = (JSONObject) parser.
+			 * parse(result);
+			 */
+
+			Gson g = new Gson();
+			rootObj = g.fromJson(result, Root.class);
+
+			// JSONObject jsonObject = new JSONObject(result);
+
 			System.out.println(conn.getResponseCode() + " : " + conn.getResponseMessage());
 			System.out.println(conn.getResponseCode() == HttpURLConnection.HTTP_OK);
 			ownerProcessObj.setProcessCode(conn.getResponseCode());
 			ownerProcessObj.setProcessError(conn.getResponseMessage());
-			
-			if(conn.getResponseCode() !=200) {
-				throw new RuntimeException("Failed : HTTP error code : "
-						+ conn.getResponseCode());
+
+			if (conn.getResponseCode() != 200) {
+				throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
 			}
 
-			System.out.println("Using proxy:" + conn.usingProxy()); 
+			System.out.println("Using proxy:" + conn.usingProxy());
 			ownerProcessObj.setUsingProxy(conn.usingProxy());
-			
+
 			ownerProcessRepository.save(ownerProcessObj);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(false);
-		}finally {
+		} finally {
 			conn.disconnect();
 		}
-		
+
 		return rootObj;
+	}
+
+	@Override
+	public void multiThreadExecuteProxy(ConfigurationDto configDtoObj) {
+		try {
+			service = Executors.newScheduledThreadPool(THREAD_POOL_VALUE);
+			List<Properties> propObjList = propertiesJpaRepository.findAll();
+			List<ScheduledFuture<String>> results = new ArrayList<ScheduledFuture<String>>();
+			for (Properties propObj : propObjList) {
+				ExecuteProxyTask proxyTask = new ExecuteProxyTask(configDtoObj, propObj);
+				ScheduledFuture<String> result = service.schedule(proxyTask, 5, TimeUnit.SECONDS);
+				results.add(result);
+			}
+			service.awaitTermination(1, TimeUnit.SECONDS);
+
+		} catch (Exception e) {
+			logger.error("Error in multiThreadExecuteProxy Service" + e);
+		} finally {
+			service.shutdown();
+		}
+	}
+
+	@Override
+	public void stopMultiThreadExecuteProxy(ConfigurationDto configDtoObj) {
+		if (null != service && !service.isShutdown()) {
+			service.shutdown();
+		}
+
 	}
 
 }

@@ -25,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.json2sql.dto.ConfigurationDto;
 import com.project.json2sql.dto.InputProxyDto;
-import com.project.json2sql.model.AuditProperties;
 import com.project.json2sql.model.ConfigProperties;
 import com.project.json2sql.model.OwnerDetails;
 import com.project.json2sql.service.ProcessService;
@@ -38,15 +37,15 @@ import io.swagger.annotations.ApiResponses;
 
 @RequestMapping("/json2sql")
 public class OwnerController {
-	
+
 	public static final Logger logger = LoggerFactory.getLogger(OwnerController.class);
 
 	@Value("${pageLimit}")
-    private int pageLimit;
-	
+	private int pageLimit;
+
 	@Autowired
 	ProcessService processService;
-	
+
 	@GetMapping("/configDetails")
 	@ResponseBody
 	public ResponseEntity<?> configDetails() {
@@ -59,7 +58,7 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
-	
+
 	@PostMapping("/setConfigDetails")
 	@ResponseBody
 	public ResponseEntity<?> setConfigDetails(@RequestBody ConfigProperties configObj) {
@@ -72,22 +71,22 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
-	
+
 	@PostMapping("/uploadOwnerFile")
 	public ResponseEntity<?> uploadOwnerFile(@RequestParam("file") MultipartFile file) {
 		JSONParser parser = new JSONParser();
 		ObjectMapper objectMapper = new ObjectMapper();
-        JSONObject obj;
-        String isProcess = "N";
-        OwnerDetails ownerDetailsObj = new OwnerDetails();
+		JSONObject obj;
+		String isProcess = "N";
+		OwnerDetails ownerDetailsObj = new OwnerDetails();
 		try {
 			logger.info("Owner Xml processed");
-			obj = (JSONObject )parser.parse(new InputStreamReader(file.getInputStream(), "UTF-8"));
-			if(obj != null) {
-				InputProxyDto jsonObj = objectMapper.readValue(obj.toString(), InputProxyDto.class); 
+			obj = (JSONObject) parser.parse(new InputStreamReader(file.getInputStream(), "UTF-8"));
+			if (obj != null) {
+				InputProxyDto jsonObj = objectMapper.readValue(obj.toString(), InputProxyDto.class);
 				ownerDetailsObj = processService.startProxyProcess(jsonObj);
 			}
-			if(null != ownerDetailsObj)
+			if (null != ownerDetailsObj)
 				return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\"Success\"}");
 			else
 				return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\"Failure\"}");
@@ -96,15 +95,12 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
-	
+
 	@ApiOperation(value = "Store Proxy Data from JSON to SQL")
-	@ApiResponses(value = {
-	        @ApiResponse(code = 200, message = "Successfully Stored"),
-	        @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-	        @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-	        @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
-	}
-	)
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Successfully Stored"),
+			@ApiResponse(code = 401, message = "You are not authorized to view the resource"),
+			@ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
+			@ApiResponse(code = 404, message = "The resource you were trying to reach is not found") })
 	@PostMapping("/getProxyDataStoreSql")
 	@ResponseBody
 	public ResponseEntity<?> getProxyData(@RequestBody InputProxyDto inputObj) {
@@ -118,7 +114,7 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
-	
+
 	@GetMapping("/getOwnerByLimit/{offset}")
 	@ResponseBody
 	public ResponseEntity<?> getOwnerLimit(@PathVariable int offset) {
@@ -131,7 +127,7 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
-	
+
 	@GetMapping("/getOwnerById/{id}")
 	@ResponseBody
 	public ResponseEntity<?> getOwnerById(@PathVariable String id) {
@@ -144,7 +140,7 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
-	
+
 	@GetMapping("/getOwnerCount")
 	@ResponseBody
 	public ResponseEntity<?> getOwnerCount() {
@@ -157,7 +153,7 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
-	
+
 	@PostMapping("/getExecuteProxy")
 	@ResponseBody
 	public ResponseEntity<?> getExecuteProxy(@RequestBody ConfigurationDto configDtoObj) {
@@ -166,6 +162,34 @@ public class OwnerController {
 		String status = "N";
 		try {
 			status = processService.getExecuteProxy(configDtoObj);
+			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+
+	@PostMapping("/startExecuteProxy")
+	@ResponseBody
+	public ResponseEntity<?> startExecuteProxy(@RequestBody ConfigurationDto configDtoObj) {
+		logger.info("startExecuteProxy Start");
+		OwnerDetails ownerDetailsObj = new OwnerDetails();
+		try {
+			processService.multiThreadExecuteProxy(configDtoObj);
+			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+
+	@PostMapping("/stopExecuteProxy")
+	@ResponseBody
+	public ResponseEntity<?> stopExecuteProxy(@RequestBody ConfigurationDto configDtoObj) {
+		logger.info("stopExecuteProxy Start");
+		OwnerDetails ownerDetailsObj = new OwnerDetails();
+		try {
+			processService.stopMultiThreadExecuteProxy(configDtoObj);
 			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");

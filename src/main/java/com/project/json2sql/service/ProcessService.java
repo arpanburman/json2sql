@@ -13,7 +13,6 @@ import com.project.json2sql.model.OwnerDetails;
 import com.project.json2sql.model.ProcessScheduleJson;
 import com.project.json2sql.model.Properties;
 
-
 public interface ProcessService {
 
 	String startProcess(MainJson jsonObj);
@@ -49,5 +48,9 @@ public interface ProcessService {
 	int getOwnerCount();
 
 	String getExecuteProxy(ConfigurationDto configDtoObj);
+
+	void multiThreadExecuteProxy(ConfigurationDto configDtoObj);
+
+	void stopMultiThreadExecuteProxy(ConfigurationDto configDtoObj);
 
 }
