@@ -40,6 +40,7 @@ import com.project.json2sql.dto.PagesDto;
 import com.project.json2sql.dto.PropertyDto;
 import com.project.json2sql.dto.Root;
 import com.project.json2sql.dto.SummaryDto;
+import com.project.json2sql.helper.ProcessServiceHelper;
 import com.project.json2sql.model.AuditOwnerDetails;
 import com.project.json2sql.model.AuditProperties;
 import com.project.json2sql.model.ConfigProperties;
@@ -102,6 +103,9 @@ public class ProcessServiceImpl implements ProcessService {
 
 	@Autowired
 	OwnerProcessRepository ownerProcessRepository;
+
+	@Autowired
+	ProcessServiceHelper processServiceHelper;
 
 	private ExecutorService service;
 
@@ -624,83 +628,15 @@ public class ProcessServiceImpl implements ProcessService {
 		String status = "N";
 		try {
 			if (null != configPropertiesObj) {
-				
+
 				// Set input object
 				List<Properties> propObjList = propertiesJpaRepository.findAll();
 				if (propObjList.size() > 0) {
 					for (Properties propObj : propObjList) {
 						List<OwnerProcess> ownerObjList = ownerProcessRepository.fetchById(propObj.getId());
-						if(ownerObjList.size()==0) {
-							InputProxyDto inputObj = new InputProxyDto();
-							OwnerProcess ownerProcess = new OwnerProcess();
-	
-							inputObj.setOp(configPropertiesObj.getOp());
-							inputObj.setSid(configPropertiesObj.getSid());
-							inputObj.setUid(configPropertiesObj.getUid());
-							inputObj.setLoc("AU");
-							inputObj.setAppCode("rppandroid");
-							inputObj.setId(Integer.parseInt(propObj.getId()));
-	
-							ownerProcess.setId(propObj.getId());
-							ownerProcess.setCreatedDate(DateUtil.getCurrentDateTime());
-							ownerProcess.setCreatedBy("System");
-							ownerProcess.setIsProcess("N");
-	
-							Root rootObj = callProxy(configPropertiesObj, inputObj, ownerProcess);
-	
-							if (rootObj != null) {
-								List<OwnerDetails> ownerDetailsListOldObj = ownerDetailsRepository
-										.fetchById(inputObj.getId() + "");
-								if (ownerDetailsListOldObj.size() > 0) {
-									// Audit table transfer
-									auditOwnerDetails.setFirstName(ownerDetailsListOldObj.get(0).getFirstName());
-									auditOwnerDetails.setLastName(ownerDetailsListOldObj.get(0).getLastName());
-									auditOwnerDetails.setOwnerAddress(ownerDetailsListOldObj.get(0).getOwnerAddress());
-									auditOwnerDetails.setOwnerName(ownerDetailsListOldObj.get(0).getOwnerName());
-									auditOwnerDetails.setCompanyName(ownerDetailsListOldObj.get(0).getCompanyName());
-									auditOwnerDetails.setId(ownerDetailsListOldObj.get(0).getId());
-									auditOwnerDetails.setCreatedBy(ownerDetailsListOldObj.get(0).getCreatedBy());
-									auditOwnerDetails.setCreatedDate(ownerDetailsListOldObj.get(0).getCreatedDate());
-									auditOwnerDetails.setIsActive("Y");
-									auditOwnerDetailsRepository
-											.updateStatus(ownerDetailsListOldObj.get(0).getId().toString(), "N");
-									auditOwnerDetailsRepository.save(auditOwnerDetails);
-	
-									ownerDetailsObj.setOwnerId(ownerDetailsListOldObj.get(0).getOwnerId());
-									ownerDetailsObj.setFirstName(
-											rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
-									ownerDetailsObj.setLastName(
-											rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
-									ownerDetailsObj.setOwnerAddress(
-											rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
-									ownerDetailsObj.setOwnerName(
-											rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
-									ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
-									ownerDetailsObj.setId(inputObj.getId().toString());
-									ownerDetailsObj.setCreatedDate(DateUtil.getCurrentDateTime());
-									ownerDetailsObj.setCreatedBy("System");
-									ownerDetailsObj.setIsActive("Y");
-									ownerDetailsRepository.save(ownerDetailsObj);
-									status = "Y";
-	
-								} else {
-									ownerDetailsObj.setFirstName(
-											rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
-									ownerDetailsObj.setLastName(
-											rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
-									ownerDetailsObj.setOwnerAddress(
-											rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
-									ownerDetailsObj.setOwnerName(
-											rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
-									ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
-									ownerDetailsObj.setId(inputObj.getId().toString());
-									ownerDetailsObj.setCreatedDate(DateUtil.getCurrentDateTime());
-									ownerDetailsObj.setCreatedBy("System");
-									ownerDetailsObj.setIsActive("Y");
-									ownerDetailsRepository.save(ownerDetailsObj);
-									status = "Y";
-								}
-							}
+						if (ownerObjList.size() == 0) {
+							this.processServiceHelper.doExecuteProxy(propObj, configPropertiesObj, ownerDetailsObj,
+									auditOwnerDetails, status);
 						}
 					}
 				}
@@ -792,13 +728,15 @@ public class ProcessServiceImpl implements ProcessService {
 	}
 
 	@Override
-	public void multiThreadExecuteProxy(ConfigurationDto configDtoObj) throws Exception {
+	public void multiThreadExecuteProxy() throws Exception {
 		try {
 			service = Executors.newFixedThreadPool(THREAD_POOL_VALUE);
 			List<Properties> propObjList = propertiesJpaRepository.findAll();
+			ConfigProperties configPropertiesObj = new ConfigProperties();
+			configPropertiesObj = configPropertiesRepository.fetchById(1);
 			List<Future<String>> resultList = null;
 			List<ExecuteProxyTask> taskList = new ArrayList<ExecuteProxyTask>();
-			createTaskListProcess(configDtoObj, propObjList, taskList);
+			createTaskListProcess(configPropertiesObj, propObjList, taskList);
 			resultList = service.invokeAll(taskList);
 		} catch (Exception e) {
 			logger.error("Error in multiThreadExecuteProxy Service" + e);
@@ -808,7 +746,7 @@ public class ProcessServiceImpl implements ProcessService {
 		}
 	}
 
-	private void createTaskListProcess(ConfigurationDto configDtoObj, List<Properties> propObjList,
+	private void createTaskListProcess(ConfigProperties configDtoObj, List<Properties> propObjList,
 			List<ExecuteProxyTask> taskList) {
 		for (Properties propObj : propObjList) {
 			ExecuteProxyTask proxyTask = new ExecuteProxyTask(configDtoObj, propObj);
@@ -831,12 +769,11 @@ public class ProcessServiceImpl implements ProcessService {
 			ownerProcess.setId(id);
 			ownerProcess.setCreatedDate(DateUtil.getCurrentDateTime());
 			ownerProcess.setIsProcess("N");
-			
 			ownerProcessRepository.save(ownerProcess);
 		} catch (Exception e) {
 			logger.error("Process id not created", e);
 		}
-		
+
 	}
 
 	@Override

@@ -50,7 +50,7 @@ public interface ProcessService {
 
 	String getExecuteProxy();
 
-	void multiThreadExecuteProxy(ConfigurationDto configDtoObj) throws Exception;
+	void multiThreadExecuteProxy() throws Exception;
 
 	void stopMultiThreadExecuteProxy() throws InterruptedException;
 

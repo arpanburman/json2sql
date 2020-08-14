@@ -172,10 +172,10 @@ public class OwnerController {
 
 	@PostMapping("/startExecuteProxy")
 	@ResponseBody
-	public ResponseEntity<?> startExecuteProxy(@RequestBody ConfigurationDto configDtoObj) {
+	public ResponseEntity<?> startExecuteProxy() {
 		logger.info("startExecuteProxy Start");
 		try {
-			processService.multiThreadExecuteProxy(configDtoObj);
+			processService.multiThreadExecuteProxy();
 			return ResponseEntity.status(HttpStatus.OK).build();
 		} catch (Exception ex) {
 			logger.error("Error Occured while startExecuteProxy");
@@ -195,7 +195,7 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
-	
+
 	@GetMapping("/addProcessID/{id}")
 	@ResponseBody
 	public ResponseEntity<?> addProcessID(@PathVariable String id) {
@@ -208,7 +208,7 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
-	
+
 	@GetMapping("/getProcessFailedData/{offset}")
 	@ResponseBody
 	public ResponseEntity<?> getProcessFailedData(@PathVariable int offset) {
