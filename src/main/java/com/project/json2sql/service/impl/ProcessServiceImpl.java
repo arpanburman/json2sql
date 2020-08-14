@@ -822,6 +822,7 @@ public class ProcessServiceImpl implements ProcessService {
 			service.shutdown();
 			service.awaitTermination(1, TimeUnit.SECONDS);
 		}
+	}
 
 	@Override
 	public void addProcessID(String id) {
