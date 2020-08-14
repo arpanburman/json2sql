@@ -173,26 +173,24 @@ public class OwnerController {
 	@ResponseBody
 	public ResponseEntity<?> startExecuteProxy(@RequestBody ConfigurationDto configDtoObj) {
 		logger.info("startExecuteProxy Start");
-		OwnerDetails ownerDetailsObj = new OwnerDetails();
 		try {
 			processService.multiThreadExecuteProxy(configDtoObj);
-			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
+			return ResponseEntity.status(HttpStatus.OK).build();
 		} catch (Exception ex) {
-			logger.error("Error Occured while Fetch");
+			logger.error("Error Occured while startExecuteProxy");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
 
 	@PostMapping("/stopExecuteProxy")
 	@ResponseBody
-	public ResponseEntity<?> stopExecuteProxy(@RequestBody ConfigurationDto configDtoObj) {
+	public ResponseEntity<?> stopExecuteProxy() {
 		logger.info("stopExecuteProxy Start");
-		OwnerDetails ownerDetailsObj = new OwnerDetails();
 		try {
-			processService.stopMultiThreadExecuteProxy(configDtoObj);
-			return ResponseEntity.status(HttpStatus.OK).body(ownerDetailsObj);
+			processService.stopMultiThreadExecuteProxy();
+			return ResponseEntity.status(HttpStatus.OK).build();
 		} catch (Exception ex) {
-			logger.error("Error Occured while Fetch");
+			logger.error("Error Occured while stopExecuteProxy");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}

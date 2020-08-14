@@ -806,7 +806,7 @@ public class ProcessServiceImpl implements ProcessService {
 	}
 
 	@Override
-	public void stopMultiThreadExecuteProxy(ConfigurationDto configDtoObj) throws InterruptedException {
+	public void stopMultiThreadExecuteProxy() throws InterruptedException {
 		if (null != service && !service.isShutdown()) {
 			service.shutdown();
 			service.awaitTermination(1, TimeUnit.SECONDS);

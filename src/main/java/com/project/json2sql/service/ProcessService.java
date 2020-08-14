@@ -51,6 +51,6 @@ public interface ProcessService {
 
 	void multiThreadExecuteProxy(ConfigurationDto configDtoObj) throws Exception;
 
-	void stopMultiThreadExecuteProxy(ConfigurationDto configDtoObj) throws InterruptedException;
+	void stopMultiThreadExecuteProxy() throws InterruptedException;
 
 }
