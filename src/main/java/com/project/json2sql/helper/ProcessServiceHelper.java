@@ -38,6 +38,9 @@ public class ProcessServiceHelper {
 
 	public String doExecuteProxy(Properties propObj, ConfigProperties configDtoObj, OwnerDetails ownerDetailsObj,
 			AuditOwnerDetails auditOwnerDetails, String status) throws Exception {
+		if ("cronJob".equals(status)) {
+			Thread.sleep(Long.parseLong(configDtoObj.getTime()));
+		}
 		InputProxyDto inputObj = new InputProxyDto();
 		OwnerProcess ownerProcess = new OwnerProcess();
 		inputObj.setOp(configDtoObj.getOp());
