@@ -57,7 +57,8 @@ public class Scheduler {
 	 * DateUtil.getCurrentDateTime()); ownerSchedulerService.ownerJsonUploadJob(); }
 	 */
 
-	@Scheduled(cron = "0/1 * 10-17 * * ?")
+	//@Scheduled(cron = "0/1 * 10-17 * * ?")
+	//@Scheduled(cron = "0 0/1 * * * ?")
 	public void cronJobExecuteProxy() {
 		System.out.println("Execute proxy job expression:: " + DateUtil.getCurrentDateTime());
 		OwnerDetails ownerDetailsObj = new OwnerDetails();
@@ -69,11 +70,10 @@ public class Scheduler {
 				List<Properties> propObjList = propertiesJpaRepository.findAll();
 				if (propObjList.size() > 0) {
 					for (Properties propObj : propObjList) {
-						List<OwnerProcess> ownerObjList = ownerProcessRepository.fetchById(propObj.getId());
-						if (ownerObjList.size() == 0) {
-							this.processServiceHelper.doExecuteProxy(propObj, configPropertiesObj, ownerDetailsObj,
-									auditOwnerDetails, "cronJob");
-						}
+						//List<OwnerProcess> ownerObjList = ownerProcessRepository.fetchById(propObj.getId());
+						//if (ownerObjList.size() == 0) {
+							this.processServiceHelper.doExecuteProxy(propObj, configPropertiesObj, "cronJob");
+						//}
 					}
 				}
 			}

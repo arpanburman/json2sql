@@ -54,7 +54,7 @@ public interface ProcessService {
 
 	void stopMultiThreadExecuteProxy() throws InterruptedException;
 
-	void addProcessID(String id);
+	String addProcessID(String id);
 
 	List<OwnerProcess> getProcessFailedData(int pageLimit, int offset);
 

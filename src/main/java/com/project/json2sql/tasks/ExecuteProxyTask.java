@@ -30,20 +30,18 @@ public class ExecuteProxyTask implements Callable<String> {
 
 	@Override
 	public String call() throws Exception {
-		Thread.sleep(Long.parseLong(configDtoObj.getTime()));
-		OwnerDetails ownerDetailsObj = new OwnerDetails();
-		AuditOwnerDetails auditOwnerDetails = new AuditOwnerDetails();
+		//logger.info("Thread is going to Sleep");
+		Thread.sleep(Long.parseLong(configDtoObj.getFrequency()));
+		logger.info("Thread is started");
 		String status = "N";
 		try {
 			if (null != this.configDtoObj) {
-
-				status = processServiceHelper.doExecuteProxy(this.propObj, this.configDtoObj, ownerDetailsObj,
-						auditOwnerDetails, status);
+				status = processServiceHelper.doExecuteProxy(propObj, configDtoObj, status);
 			}
-
 		} catch (Exception e) {
 			status = "N";
-			logger.error("Error in Proxy Service" + e);
+			e.printStackTrace();
+			logger.error("Error in Proxy Service " + e.getMessage());
 		}
 		return status;
 	}

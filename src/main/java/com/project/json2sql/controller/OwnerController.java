@@ -200,9 +200,10 @@ public class OwnerController {
 	@ResponseBody
 	public ResponseEntity<?> addProcessID(@PathVariable String id) {
 		logger.info("Add Process ID");
+		String status = "Error: Property Id not Added";
 		try {
-			processService.addProcessID(id);
-			return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\"Success\"}");
+			status = processService.addProcessID(id);
+			return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\"'"+status+"'\"}");
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");

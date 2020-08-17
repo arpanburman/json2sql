@@ -21,7 +21,7 @@
 		$scope.offset = 0;
 		$scope.count = 0;
 		$scope.owners = [];
-		$scope.form = {
+		$scope.new = {
 			id : ""
 		};
 		
@@ -66,6 +66,7 @@
 			}, function errorCallback(response) {
 				console.log(response.statusText);
 			});
+			
 		}
 
 		function _refreshTableData() {
@@ -98,7 +99,8 @@
 				method : 'GET',
 				url : 'json2sql/addProcessID/' + id
 			}).then(function successCallback(response) {
-				alert("ID Processed");
+				alert(response.data.status);
+				_clearForm();
 				_refreshTableData();
 			}, function errorCallback(response) {
 				console.log(response.statusText);
@@ -127,6 +129,16 @@
 			}, function errorCallback(response) {
 				console.log(response.statusText);
 			});
+		}
+		
+		$scope.reset = function() {
+			_refreshPageData();
+			_clearForm();
+		}
+		
+		function _clearForm() {
+			$scope.new.id = "";
+			$scope.search = "";
 		}
 
 	});
@@ -249,7 +261,7 @@ footer {
 									ng-model="config.authorization">
 							</div>
 							<div class="form-group">
-								<label for="exampleInputEmail1">Op</label> <input
+								<label for="exampleInputEmail1">OP</label> <input
 									class="form-control form-control-sm" type="text"
 									placeholder="OP Value" ng-model="config.op">
 							</div>
@@ -301,7 +313,7 @@ footer {
 						</form>
 						<hr>
 						<div class="card-body">
-							<h3>Failed Process Shows Below:</h3>
+							<h3>Processed Table Shows Below (Failed & Success):</h3>
 							<ul class="pager">
 								<li class="previous"><button type="button"
 										class="btn btn-primary" ng-click="prevOffset()">Previous</button></li>

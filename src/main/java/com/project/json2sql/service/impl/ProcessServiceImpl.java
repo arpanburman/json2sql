@@ -633,11 +633,10 @@ public class ProcessServiceImpl implements ProcessService {
 				List<Properties> propObjList = propertiesJpaRepository.findAll();
 				if (propObjList.size() > 0) {
 					for (Properties propObj : propObjList) {
-						List<OwnerProcess> ownerObjList = ownerProcessRepository.fetchById(propObj.getId());
-						if (ownerObjList.size() == 0) {
-							this.processServiceHelper.doExecuteProxy(propObj, configPropertiesObj, ownerDetailsObj,
-									auditOwnerDetails, status);
-						}
+						//List<OwnerProcess> ownerObjList = ownerProcessRepository.fetchById(propObj.getId());
+						//if (ownerObjList.size() == 0) {
+							this.processServiceHelper.doExecuteProxy(propObj, configPropertiesObj, status);
+						//}
 					}
 				}
 			}
@@ -736,8 +735,12 @@ public class ProcessServiceImpl implements ProcessService {
 			configPropertiesObj = configPropertiesRepository.fetchById(1);
 			List<Future<String>> resultList = null;
 			List<ExecuteProxyTask> taskList = new ArrayList<ExecuteProxyTask>();
-			createTaskListProcess(configPropertiesObj, propObjList, taskList);
-			resultList = service.invokeAll(taskList);
+			logger.info("Create Task list Started:::");
+			//createTaskListProcess(configPropertiesObj, propObjList, taskList);
+			//resultList = service.invokeAll(taskList);
+			for (Properties propObj : propObjList) {
+				processServiceHelper.doExecuteProxy(propObj, configPropertiesObj, "N");
+			}
 		} catch (Exception e) {
 			logger.error("Error in multiThreadExecuteProxy Service" + e);
 		} finally {
@@ -763,17 +766,22 @@ public class ProcessServiceImpl implements ProcessService {
 	}
 
 	@Override
-	public void addProcessID(String id) {
+	public String addProcessID(String id) {
 		OwnerProcess ownerProcess = new OwnerProcess();
+		String status = "Property ID not available";
 		try {
-			ownerProcess.setId(id);
-			ownerProcess.setCreatedDate(DateUtil.getCurrentDateTime());
-			ownerProcess.setIsProcess("N");
-			ownerProcessRepository.save(ownerProcess);
+			if(null != id) {
+				ownerProcess.setId(id);
+				ownerProcess.setCreatedDate(DateUtil.getCurrentDateTime());
+				ownerProcess.setIsProcess("N");
+				ownerProcessRepository.save(ownerProcess);
+				status = "Property ID added for process";
+			}
 		} catch (Exception e) {
-			logger.error("Process id not created", e);
+			status = "Error: Property ID not added";
+			logger.error("Process ID not created", e);
 		}
-
+		return status;
 	}
 
 	@Override
