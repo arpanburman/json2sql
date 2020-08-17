@@ -17,7 +17,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -633,10 +632,11 @@ public class ProcessServiceImpl implements ProcessService {
 				List<Properties> propObjList = propertiesJpaRepository.findAll();
 				if (propObjList.size() > 0) {
 					for (Properties propObj : propObjList) {
-						//List<OwnerProcess> ownerObjList = ownerProcessRepository.fetchById(propObj.getId());
-						//if (ownerObjList.size() == 0) {
-							this.processServiceHelper.doExecuteProxy(propObj, configPropertiesObj, status);
-						//}
+						// List<OwnerProcess> ownerObjList =
+						// ownerProcessRepository.fetchById(propObj.getId());
+						// if (ownerObjList.size() == 0) {
+						this.processServiceHelper.doExecuteProxy(propObj, configPropertiesObj, status);
+						// }
 					}
 				}
 			}
@@ -736,23 +736,19 @@ public class ProcessServiceImpl implements ProcessService {
 			List<Future<String>> resultList = null;
 			List<ExecuteProxyTask> taskList = new ArrayList<ExecuteProxyTask>();
 			logger.info("Create Task list Started:::");
-			//createTaskListProcess(configPropertiesObj, propObjList, taskList);
-			//resultList = service.invokeAll(taskList);
-			for (Properties propObj : propObjList) {
-				processServiceHelper.doExecuteProxy(propObj, configPropertiesObj, "N");
-			}
+			createTaskListProcess(configPropertiesObj, propObjList, taskList);
+			resultList = service.invokeAll(taskList);
 		} catch (Exception e) {
 			logger.error("Error in multiThreadExecuteProxy Service" + e);
 		} finally {
 			service.shutdown();
-			service.awaitTermination(1, TimeUnit.SECONDS);
 		}
 	}
 
 	private void createTaskListProcess(ConfigProperties configDtoObj, List<Properties> propObjList,
 			List<ExecuteProxyTask> taskList) {
 		for (Properties propObj : propObjList) {
-			ExecuteProxyTask proxyTask = new ExecuteProxyTask(configDtoObj, propObj);
+			ExecuteProxyTask proxyTask = new ExecuteProxyTask(configDtoObj, propObj, processServiceHelper);
 			taskList.add(proxyTask);
 		}
 	}
@@ -760,8 +756,7 @@ public class ProcessServiceImpl implements ProcessService {
 	@Override
 	public void stopMultiThreadExecuteProxy() throws InterruptedException {
 		if (null != service && !service.isShutdown()) {
-			service.shutdown();
-			service.awaitTermination(1, TimeUnit.SECONDS);
+			service.shutdownNow();
 		}
 	}
 
@@ -770,7 +765,7 @@ public class ProcessServiceImpl implements ProcessService {
 		OwnerProcess ownerProcess = new OwnerProcess();
 		String status = "Property ID not available";
 		try {
-			if(null != id) {
+			if (null != id) {
 				ownerProcess.setId(id);
 				ownerProcess.setCreatedDate(DateUtil.getCurrentDateTime());
 				ownerProcess.setIsProcess("N");
