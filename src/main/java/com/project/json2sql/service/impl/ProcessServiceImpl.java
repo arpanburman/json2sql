@@ -516,10 +516,15 @@ public class ProcessServiceImpl implements ProcessService {
 			cofigPropObj.setOp(configDtoObj.getOp());
 			cofigPropObj.setSid(configDtoObj.getSid());
 			cofigPropObj.setUid(configDtoObj.getUid());
+			cofigPropObj.setIp(configDtoObj.getIp());
+			cofigPropObj.setPort(configDtoObj.getPort());
 			cofigPropObj.setAuthorization(configDtoObj.getAuthorization());
 			cofigPropObj.setFrequency(configDtoObj.getFrequency());
-			cofigPropObj.setTime(configDtoObj.getTime());
+			cofigPropObj.setStarttime(configDtoObj.getStarttime());
+			cofigPropObj.setEndtime(configDtoObj.getEndtime());
 			cofigPropObj.setUrl(configDtoObj.getUrl());
+			cofigPropObj.setLoc(configDtoObj.getLoc());
+			cofigPropObj.setAppcode(configDtoObj.getAppCode());
 			cofigPropObj = configPropertiesRepository.save(cofigPropObj);
 		} catch (Exception e) {
 			logger.error("Error in Config prop Save Service" + e);
@@ -791,5 +796,32 @@ public class ProcessServiceImpl implements ProcessService {
 		}
 		return ownerObjList;
 	}
+	
+	@Override
+	public void multiThreadReRunFailedExecuteProxy() throws Exception {
+		try {
+			service = Executors.newFixedThreadPool(THREAD_POOL_VALUE);
+			List<OwnerProcess> ownerObjList = ownerProcessRepository.fetchByFailedProcess("N");
+			List<Properties> propertiesListObj = new ArrayList<>();
+			if(ownerObjList.size()>0) {
+				for(OwnerProcess ownerProcessObj : ownerObjList) {
+					List<Properties> propertiesList = propertiesRepository.fetchById(ownerProcessObj.getId());
+					propertiesListObj.add(propertiesList.get(0));
+				}
+			}
+			ConfigProperties configPropertiesObj = new ConfigProperties();
+			configPropertiesObj = configPropertiesRepository.fetchById(1);
+			List<Future<String>> resultList = null;
+			List<ExecuteProxyTask> taskList = new ArrayList<ExecuteProxyTask>();
+			logger.info("Create Task list Started:::");
+			createTaskListProcess(configPropertiesObj, propertiesListObj, taskList);
+			resultList = service.invokeAll(taskList);
+		} catch (Exception e) {
+			logger.error("Error in multiThreadReRunFailedExecuteProxy Service" + e);
+		} finally {
+			service.shutdown();
+		}
+	}
+	
 
 }

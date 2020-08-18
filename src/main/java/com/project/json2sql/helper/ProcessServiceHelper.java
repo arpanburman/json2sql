@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -20,7 +21,6 @@ import com.project.json2sql.model.AuditOwnerDetails;
 import com.project.json2sql.model.ConfigProperties;
 import com.project.json2sql.model.OwnerDetails;
 import com.project.json2sql.model.OwnerProcess;
-import com.project.json2sql.model.Properties;
 import com.project.json2sql.repository.AuditOwnerDetailsRepository;
 import com.project.json2sql.repository.OwnerDetailsRepository;
 import com.project.json2sql.repository.OwnerProcessRepository;
@@ -37,14 +37,14 @@ public class ProcessServiceHelper {
 
 	@Autowired
 	private OwnerProcessRepository ownerProcessRepository;
-
+	
 	public static final Logger logger = LoggerFactory.getLogger(ProcessServiceHelper.class);
 
-	public String doExecuteProxy(Properties propObj, ConfigProperties configDtoObj, String status) throws Exception {
+	public String doExecuteProxy(com.project.json2sql.model.Properties propObj, ConfigProperties configDtoObj, String status) throws Exception {
 		if ("cronJob".equals(status)) {
 			Thread.sleep(Long.parseLong(configDtoObj.getFrequency()));
 		}
-		logger.info("Execution Start for ID:", propObj.getId());
+		logger.info("Execution Start for ID:",propObj.getId());
 		OwnerDetails ownerDetailsObj = new OwnerDetails();
 		AuditOwnerDetails auditOwnerDetails = new AuditOwnerDetails();
 		InputProxyDto inputObj = new InputProxyDto();
@@ -52,8 +52,8 @@ public class ProcessServiceHelper {
 		inputObj.setOp(configDtoObj.getOp());
 		inputObj.setSid(configDtoObj.getSid());
 		inputObj.setUid(configDtoObj.getUid());
-		inputObj.setLoc("AU");
-		inputObj.setAppCode("rppandroid");
+		inputObj.setLoc(configDtoObj.getLoc());
+		inputObj.setAppCode(configDtoObj.getAppcode());
 		inputObj.setId(Integer.parseInt(propObj.getId()));
 		ownerProcess.setId(propObj.getId());
 		ownerProcess.setCreatedDate(DateUtil.getCurrentDateTime());
@@ -113,10 +113,17 @@ public class ProcessServiceHelper {
 	public Root callProxy(ConfigProperties configDtoObj, InputProxyDto inputObj, OwnerProcess ownerProcess)
 			throws Exception {
 		Root rootObj = new Root();
+		OwnerProcess ownerProcessObj = ownerProcess;
+		logger.info("Proxy Execution Start for ID:",inputObj.getId());
+		
+		Properties systemSettings = System.getProperties();
+		systemSettings.setProperty("proxySet", "true");
+		systemSettings.setProperty("http.proxyHost", configDtoObj.getIp());
+		systemSettings.setProperty("http.proxyPort", configDtoObj.getPort());
+		
 		URL u = new URL(configDtoObj.getUrl());
 		HttpURLConnection conn = (HttpURLConnection) u.openConnection();
-		OwnerProcess ownerProcessObj = ownerProcess;
-		logger.info("Proxy Execution Start for ID:", inputObj.getId());
+		
 		try {
 			conn.setDoOutput(true);
 			conn.setInstanceFollowRedirects(false);
@@ -180,6 +187,16 @@ public class ProcessServiceHelper {
 		}
 
 		return rootObj;
+	}
+	
+	public void saveFailedData(OwnerProcess ownerProcessObj) {
+		try {
+			logger.info("Called save data");
+			ownerProcessRepository.deleteOldProcess(ownerProcessObj.getId());
+			ownerProcessRepository.save(ownerProcessObj);
+		} catch (Exception e) {
+			logger.error("OwnerProcess Save error");
+		}
 	}
 
 }

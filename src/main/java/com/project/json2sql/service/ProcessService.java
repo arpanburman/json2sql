@@ -58,4 +58,6 @@ public interface ProcessService {
 
 	List<OwnerProcess> getProcessFailedData(int pageLimit, int offset);
 
+	void multiThreadReRunFailedExecuteProxy() throws Exception;
+
 }

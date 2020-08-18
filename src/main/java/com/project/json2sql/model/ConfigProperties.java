@@ -22,8 +22,17 @@ public class ConfigProperties {
 	@Column(name="url")
 	private String url;
 	
-	@Column(name="time")
-	private String time;
+	@Column(name="ip")
+	private String ip;
+	
+	@Column(name="port")
+	private String port;
+	
+	@Column(name="starttime")
+	private String starttime;
+	
+	@Column(name="endtime")
+	private String endtime;
 	
 	@Column(name="frequency")
 	private String frequency;
@@ -36,6 +45,12 @@ public class ConfigProperties {
 	
 	@Column(name="uid")
 	private String uid;
+	
+	@Column(name="loc")
+	private String loc;
+	
+	@Column(name="appcode")
+	private String appcode;
 
 	public long getId() {
 		return id;
@@ -59,14 +74,6 @@ public class ConfigProperties {
 
 	public void setUrl(String url) {
 		this.url = url;
-	}
-
-	public String getTime() {
-		return time;
-	}
-
-	public void setTime(String time) {
-		this.time = time;
 	}
 
 	public String getFrequency() {
@@ -101,5 +108,52 @@ public class ConfigProperties {
 		this.uid = uid;
 	}
 
-	    
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+
+	public String getPort() {
+		return port;
+	}
+
+	public void setPort(String port) {
+		this.port = port;
+	}
+
+	public String getLoc() {
+		return loc;
+	}
+
+	public void setLoc(String loc) {
+		this.loc = loc;
+	}
+
+	public String getAppcode() {
+		return appcode;
+	}
+
+	public void setAppcode(String appcode) {
+		this.appcode = appcode;
+	}
+
+	public String getStarttime() {
+		return starttime;
+	}
+
+	public void setStarttime(String starttime) {
+		this.starttime = starttime;
+	}
+
+	public String getEndtime() {
+		return endtime;
+	}
+
+	public void setEndtime(String endtime) {
+		this.endtime = endtime;
+	}
+
 }

@@ -13,6 +13,7 @@
 <script
 	src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
 <script type="text/javascript">
+
 	var app = angular.module("UserManagement", []);
 
 	//Controller Part
@@ -25,34 +26,50 @@
 			id : ""
 		};
 		
+		function validateForm(){
+			  var z = document.forms["myForm"]["timepicker"].value;
+			  if(!/^[0-9]+$/.test(z)){
+			    alert("Please only enter numeric characters only for your Age! (Allowed input:0-9)")
+			  }
+			}
+		
 		_refreshPageData();
 		_refreshTableData();
 
-		$scope.submitConfig = function(authorization, op, sid, uid, url, time,
-				frequency) {
+		$scope.submitConfig = function(authorization, op, sid, uid, url, ip, port,
+				frequency, loc, appcode, starttime, endtime) {
 			var method = "POST";
 			var data = {
-				authorization : authorization,
-				op : op,
-				sid : sid,
-				uid : uid,
-				url : url,
-				time : time,
-				frequency : frequency
-			};
-			$http({
-				method : method,
-				url : 'json2sql/setConfigDetails/',
-				data : JSON.stringify(data),
-				headers : {
-					'Content-Type' : 'application/json'
-				}
-			}).then(function successCallback(response) {
-				$scope.config = response.data;
-				alert("Configuration Processed");
-			}, function errorCallback(response) {
-				console.log(response.statusText);
-			});
+					authorization : authorization,
+					op : op,
+					sid : sid,
+					uid : uid,
+					url : url,
+					ip : ip,
+					port : port,
+					frequency : frequency,
+					loc : loc,
+					appCode :  appcode,
+					starttime : starttime,
+					endtime : endtime
+				};
+		    if((starttime==0 || starttime <=24) && (endtime==0 || endtime <=24) && (endtime > starttime)) {
+		    	$http({
+					method : method,
+					url : 'json2sql/setConfigDetails/',
+					data : JSON.stringify(data),
+					headers : {
+						'Content-Type' : 'application/json'
+					}
+				}).then(function successCallback(response) {
+					$scope.config = response.data;
+					alert("Configuration Processed");
+				}, function errorCallback(response) {
+					console.log(response.statusText);
+				});
+		    }else{
+		    	alert("Please Enter Valid Start Time and End Time");
+		    };
 		}
 
 		/* Private Methods */
@@ -131,6 +148,18 @@
 			});
 		}
 		
+		$scope.runFailedProcess = function(){
+			$http({
+				method : 'POST',
+				url : 'json2sql/runFailedProcess/'
+			}).then(function successCallback(response) {
+				alert("Processed Failed Properties");
+				_refreshTableData();
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
 		$scope.reset = function() {
 			_refreshPageData();
 			_clearForm();
@@ -140,7 +169,7 @@
 			$scope.new.id = "";
 			$scope.search = "";
 		}
-
+		
 	});
 </script>
 <style>
@@ -213,6 +242,13 @@ footer {
 		height: auto;
 	}
 }
+body {
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	font-size: 14px;
+}
+.container {
+    padding: 20px;
+}
 </style>
 <head>
 <body ng-app="UserManagement" ng-controller="UserManagementController">
@@ -253,7 +289,7 @@ footer {
 			<div class="col-sm-8 text-centre">
 				<div class="card text-primary border-primary border-right-0">
 					<div class="card-body">
-						<form>
+						<form name ="myForm">
 							<div class="form-group">
 								<label for="exampleInputEmail1">Authorization</label> <input
 									class="form-control form-control-sm" type="text"
@@ -276,23 +312,47 @@ footer {
 									placeholder="UID Value" ng-model="config.uid">
 							</div>
 							<div class="form-group">
+								<label for="exampleInputEmail1">LOC</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="LOC Value" ng-model="config.loc">
+							</div>
+							<div class="form-group">
+								<label for="exampleInputEmail1">App Code</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="App Code Value" ng-model="config.appcode">
+							</div>
+							<div class="form-group">
+								<label for="exampleInputEmail1">Host IP</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="Host IP Value" ng-model="config.ip">
+							</div>
+							<div class="form-group">
+								<label for="exampleInputEmail1">Port</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="Port Value" ng-model="config.port">
+							</div>
+							<div class="form-group">
 								<label for="exampleInputEmail1">URL</label> <input
 									class="form-control form-control-sm" type="text"
 									placeholder="URL Value" ng-model="config.url">
-							</div>
-							<div class="form-group">
-								<label for="exampleInputEmail1">Time Limit</label> <input
-									class="form-control form-control-sm" type="text"
-									placeholder="Time Limit Value" ng-model="config.time">
 							</div>
 							<div class="form-group">
 								<label for="exampleInputEmail1">Frequency</label> <input
 									class="form-control form-control-sm" type="text"
 									placeholder="Frequency Value" ng-model="config.frequency">
 							</div>
-
+							<div class="form-group">
+								<label for="exampleInputEmail1">Start Timer</label>
+								<input type="text" class="timepicker" name="starttime" placeholder="24 hour format" 
+								ng-model="config.starttime"/>
+							</div>
+							<div class="form-group">
+								<label for="exampleInputEmail1">End Timer</label>
+								<input type="text" class="timepicker" name="endtime" 
+								placeholder="24 hour format" ng-model="config.endtime"/>
+							</div>
 							<button type="submit" class="btn btn-primary btn-large center"
-								ng-click="submitConfig(config.authorization, config.op, config.sid, config.uid, config.url, config.time, config.frequency)">Save
+								ng-click="submitConfig(config.authorization, config.op, config.sid, config.uid, config.url,config.ip, config.port, config.frequency, config.loc, config.appcode, config.starttime, config.endtime)">Save
 								Configuration</button>
 						</form>
 						<hr>
@@ -339,7 +399,7 @@ footer {
 
 							</table>
 							<button type="submit" class="btn btn-primary btn-large center"
-								ng-click="runProcess">Run Failed Process</button>
+								ng-click="runFailedProcess()">Run Failed Process</button>
 						</div>
 					</div>
 				</div>

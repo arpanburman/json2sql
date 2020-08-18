@@ -1,15 +1,18 @@
 package com.project.json2sql.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class ConfigurationDto {
 
 	private String op;
 	private String sid;
 	private String uid;
+	private String loc;
+	private String appCode;
 	private String url;
+	private String ip;
+	private String port;
 	private String authorization;
-	private String time;
+	private String starttime;
+	private String endtime;
 	private String frequency;
 	public String getOp() {
 		return op;
@@ -41,18 +44,47 @@ public class ConfigurationDto {
 	public void setAuthorization(String authorization) {
 		this.authorization = authorization;
 	}
-	public String getTime() {
-		return time;
-	}
-	public void setTime(String time) {
-		this.time = time;
-	}
 	public String getFrequency() {
 		return frequency;
 	}
 	public void setFrequency(String frequency) {
 		this.frequency = frequency;
 	}
-	
+	public String getIp() {
+		return ip;
+	}
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+	public String getPort() {
+		return port;
+	}
+	public void setPort(String port) {
+		this.port = port;
+	}
+	public String getLoc() {
+		return loc;
+	}
+	public void setLoc(String loc) {
+		this.loc = loc;
+	}
+	public String getAppCode() {
+		return appCode;
+	}
+	public void setAppCode(String appCode) {
+		this.appCode = appCode;
+	}
+	public String getStarttime() {
+		return starttime;
+	}
+	public void setStarttime(String starttime) {
+		this.starttime = starttime;
+	}
+	public String getEndtime() {
+		return endtime;
+	}
+	public void setEndtime(String endtime) {
+		this.endtime = endtime;
+	}
 	
 }

@@ -222,4 +222,17 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}
+	
+	@PostMapping("/runFailedProcess")
+	@ResponseBody
+	public ResponseEntity<?> runFailedProcess() {
+		logger.info("runFailedProcess Start");
+		try {
+			processService.multiThreadReRunFailedExecuteProxy();
+			return ResponseEntity.status(HttpStatus.OK).build();
+		} catch (Exception ex) {
+			logger.error("Error Occured while startExecuteProxy");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
 }

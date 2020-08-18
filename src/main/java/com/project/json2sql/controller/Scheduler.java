@@ -1,6 +1,7 @@
 package com.project.json2sql.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +19,11 @@ import com.project.json2sql.repository.ConfigPropertiesRepository;
 import com.project.json2sql.repository.OwnerProcessRepository;
 import com.project.json2sql.repository.PropertiesJpaRepository;
 import com.project.json2sql.service.OwnerSchedulerService;
+import com.project.json2sql.service.ProcessService;
 import com.project.json2sql.service.SchedulerService;
 import com.project.json2sql.tasks.ExecuteProxyTask;
 import com.project.json2sql.util.DateUtil;
+import com.project.json2sql.util.ServiceUtil;
 
 @Component
 public class Scheduler {
@@ -42,6 +45,9 @@ public class Scheduler {
 
 	@Autowired
 	ProcessServiceHelper processServiceHelper;
+	
+	@Autowired
+	ProcessService processService;
 
 	public static final Logger logger = LoggerFactory.getLogger(ExecuteProxyTask.class);
 
@@ -58,14 +64,41 @@ public class Scheduler {
 	 */
 
 	//@Scheduled(cron = "0/1 * 10-17 * * ?")
-	//@Scheduled(cron = "0 0/1 * * * ?")
-	public void cronJobExecuteProxy() {
+	@Scheduled(cron = "0 0/1 * * * ?")
+	public void cronJobExecuteProxy() throws InterruptedException {
 		System.out.println("Execute proxy job expression:: " + DateUtil.getCurrentDateTime());
+		
 		OwnerDetails ownerDetailsObj = new OwnerDetails();
 		AuditOwnerDetails auditOwnerDetails = new AuditOwnerDetails();
 		ConfigProperties configPropertiesObj = new ConfigProperties();
 		configPropertiesObj = configPropertiesRepository.fetchById(1);
-		try {
+		Map<String, Integer> time=ServiceUtil.currentHour();
+		
+		if(null != configPropertiesObj) {
+			if(null !=configPropertiesObj.getStarttime() && null !=configPropertiesObj.getEndtime()) {
+				if((time.get("hour")>=Integer.parseInt(configPropertiesObj.getStarttime()) && 
+						time.get("hour")<=Integer.parseInt(configPropertiesObj.getEndtime()))){
+					
+					if(time.get("hour")==Integer.parseInt(configPropertiesObj.getEndtime()) &&
+								(time.get("min")> 0)) {
+						logger.info("Schedule and Job will Shut Down");
+						processService.stopMultiThreadExecuteProxy();
+					}else {
+						try {
+							logger.info("Schedule and Job will Start");
+							processService.multiThreadExecuteProxy();
+						} catch (Exception e) {
+							logger.error("Error: in Proxy Service" + e);
+						}
+					}
+				}
+			}else {
+				logger.info("Not Scheduled");
+			}
+		}
+		
+		
+		/*try {
 			if (null != configPropertiesObj) {
 				List<Properties> propObjList = propertiesJpaRepository.findAll();
 				if (propObjList.size() > 0) {
@@ -80,7 +113,7 @@ public class Scheduler {
 
 		} catch (Exception e) {
 			logger.error("Error in Proxy Service" + e);
-		}
+		}*/
 
 	}
 
