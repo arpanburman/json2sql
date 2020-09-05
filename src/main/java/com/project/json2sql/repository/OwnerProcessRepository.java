@@ -21,4 +21,7 @@ public interface OwnerProcessRepository extends JpaRepository<OwnerProcess, Long
 	@Modifying
 	@Query("delete from #{#entityName} g where g.id = :id")
 	void deleteOldProcess(String id);
+	
+	@Query("select count(*) from #{#entityName} g where g.id = :id and g.isProcess = :isProcess")
+	int checkProcessedId(String id, String isProcess);
 }

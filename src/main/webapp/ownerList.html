@@ -60,7 +60,7 @@
         					'Content-Type' : 'application/json'
         				}
         			}).then(function successCallback(response) {
-        				$scope.employees = response.data;
+        				$scope.owners = response.data;
         			}, function errorCallback(response) {
         				console.log(response.statusText);
         			});
@@ -83,13 +83,13 @@
         		}
         		$scope.nextOffset = function() {
         			if ($scope.offset <= $scope.count) {
-        				$scope.offset = $scope.offset + 50;
+        				$scope.offset = $scope.offset + 10;
         				_refreshPageData();
         			}
         		}
         		$scope.prevOffset = function() {
         			if ($scope.offset >= 0) {
-        				$scope.offset = $scope.offset - 50;
+        				$scope.offset = $scope.offset - 10;
         				_refreshPageData();
         			}
         		}
@@ -190,6 +190,9 @@ footer {
 					<li  class="active"><a href="ownerList.html">Owner List</a></li>
 					<li><a href="configProxy.html">Configure Proxy</a></li>
 					<li><a href="SchedulerFile.html">Processed File List</a></li>
+					<li><a href="searchString.html">Search String List</a></li>
+					<li><a href="configProxyString.html">Configure
+							Search String</a></li>
 				</ul>
 			</div>
 		</div>
@@ -262,8 +265,5 @@ footer {
 			</div>
 		</div>
 	</div>
-	<footer class="container-fluid text-center">
-		<p>Copy Right Protected</p>
-	</footer>
 </body>
 </html>

@@ -60,4 +60,12 @@ public interface ProcessService {
 
 	void multiThreadReRunFailedExecuteProxy() throws Exception;
 
+	List<String> getAllSuburbs();
+
+	String getAllPropertiesFromSuburbs(String suburbs, String id);
+
+	String testProxy(ConfigurationDto configDtoObj) throws Exception;
+
+	String removeProcessID(String id);
+
 }

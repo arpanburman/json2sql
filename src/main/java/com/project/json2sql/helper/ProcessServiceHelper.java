@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.Root;
@@ -24,6 +25,7 @@ import com.project.json2sql.model.OwnerProcess;
 import com.project.json2sql.repository.AuditOwnerDetailsRepository;
 import com.project.json2sql.repository.OwnerDetailsRepository;
 import com.project.json2sql.repository.OwnerProcessRepository;
+import com.project.json2sql.repository.PropertiesRepository;
 import com.project.json2sql.util.DateUtil;
 
 @Component
@@ -38,6 +40,9 @@ public class ProcessServiceHelper {
 	@Autowired
 	private OwnerProcessRepository ownerProcessRepository;
 	
+	@Autowired
+	PropertiesRepository propertiesRepository;
+	
 	public static final Logger logger = LoggerFactory.getLogger(ProcessServiceHelper.class);
 
 	public String doExecuteProxy(com.project.json2sql.model.Properties propObj, ConfigProperties configDtoObj, String status) throws Exception {
@@ -49,63 +54,82 @@ public class ProcessServiceHelper {
 		AuditOwnerDetails auditOwnerDetails = new AuditOwnerDetails();
 		InputProxyDto inputObj = new InputProxyDto();
 		OwnerProcess ownerProcess = new OwnerProcess();
-		inputObj.setOp(configDtoObj.getOp());
-		inputObj.setSid(configDtoObj.getSid());
-		inputObj.setUid(configDtoObj.getUid());
-		inputObj.setLoc(configDtoObj.getLoc());
-		inputObj.setAppCode(configDtoObj.getAppcode());
-		inputObj.setId(Integer.parseInt(propObj.getId()));
-		ownerProcess.setId(propObj.getId());
-		ownerProcess.setCreatedDate(DateUtil.getCurrentDateTime());
-		ownerProcess.setCreatedBy("System");
-		ownerProcess.setIsProcess("N");
-
-		Root rootObj = callProxy(configDtoObj, inputObj, ownerProcess);
-
-		if (rootObj != null) {
-			List<OwnerDetails> ownerDetailsListOldObj = ownerDetailsRepository.fetchById(inputObj.getId() + "");
-			if (ownerDetailsListOldObj.size() > 0) {
-				// Audit table transfer
-				auditOwnerDetails.setFirstName(ownerDetailsListOldObj.get(0).getFirstName());
-				auditOwnerDetails.setLastName(ownerDetailsListOldObj.get(0).getLastName());
-				auditOwnerDetails.setOwnerAddress(ownerDetailsListOldObj.get(0).getOwnerAddress());
-				auditOwnerDetails.setOwnerName(ownerDetailsListOldObj.get(0).getOwnerName());
-				auditOwnerDetails.setCompanyName(ownerDetailsListOldObj.get(0).getCompanyName());
-				auditOwnerDetails.setId(ownerDetailsListOldObj.get(0).getId());
-				auditOwnerDetails.setCreatedBy(ownerDetailsListOldObj.get(0).getCreatedBy());
-				auditOwnerDetails.setCreatedDate(ownerDetailsListOldObj.get(0).getCreatedDate());
-				auditOwnerDetails.setIsActive("Y");
-				auditOwnerDetailsRepository.updateStatus(ownerDetailsListOldObj.get(0).getId().toString(), "N");
-				auditOwnerDetailsRepository.save(auditOwnerDetails);
-
-				ownerDetailsObj.setOwnerId(ownerDetailsListOldObj.get(0).getOwnerId());
-				ownerDetailsObj.setFirstName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
-				ownerDetailsObj.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
-				ownerDetailsObj
-						.setOwnerAddress(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
-				ownerDetailsObj.setOwnerName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
-				ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
-				ownerDetailsObj.setId(inputObj.getId().toString());
-				ownerDetailsObj.setCreatedDate(DateUtil.getCurrentDateTime());
-				ownerDetailsObj.setCreatedBy("System");
-				ownerDetailsObj.setIsActive("Y");
-				ownerDetailsRepository.save(ownerDetailsObj);
-				status = "Y";
-
-			} else {
-				ownerDetailsObj.setFirstName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getFirstName());
-				ownerDetailsObj.setLastName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getLastName());
-				ownerDetailsObj
-						.setOwnerAddress(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerAddress());
-				ownerDetailsObj.setOwnerName(rootObj.getResponse().getResult().getOwnerDetails().get(0).getOwnerName());
-				ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
-				ownerDetailsObj.setId(inputObj.getId().toString());
-				ownerDetailsObj.setCreatedDate(DateUtil.getCurrentDateTime());
-				ownerDetailsObj.setCreatedBy("System");
-				ownerDetailsObj.setIsActive("Y");
-				ownerDetailsRepository.save(ownerDetailsObj);
-				status = "Y";
+		int count = ownerProcessRepository.checkProcessedId(propObj.getId(), "Y");
+		if(count==0) {
+			logger.info("Processing for :: "+propObj.getId());
+			inputObj.setOp(configDtoObj.getOp());
+			inputObj.setSid(configDtoObj.getSid());
+			inputObj.setUid(configDtoObj.getUid());
+			inputObj.setLoc(configDtoObj.getLoc());
+			inputObj.setAppCode(configDtoObj.getAppcode());
+			inputObj.setId(Integer.parseInt(propObj.getId()));
+			
+			ownerProcess.setId(propObj.getId());
+			ownerProcess.setCreatedDate(DateUtil.getCurrentDateTime());
+			ownerProcess.setCreatedBy("System");
+			ownerProcess.setIsProcess("N");
+	
+			Root rootObj = callProxy(configDtoObj, inputObj, ownerProcess);
+			List<com.project.json2sql.dto.OwnerDetails> ownerDetailsListObj = rootObj.getResponse().getResult().getOwnerDetails();
+			if (rootObj != null) {
+				List<OwnerDetails> ownerDetailsListOldObj = ownerDetailsRepository.fetchById(inputObj.getId() + "");
+				if (ownerDetailsListOldObj.size() > 0) {
+					for(OwnerDetails ownerObj : ownerDetailsListOldObj) {
+						// Audit table transfer
+						auditOwnerDetails = new AuditOwnerDetails();
+						auditOwnerDetails.setFirstName(ownerObj.getFirstName());
+						auditOwnerDetails.setLastName(ownerObj.getLastName());
+						auditOwnerDetails.setOwnerAddress(ownerObj.getOwnerAddress());
+						auditOwnerDetails.setOwnerName(ownerObj.getOwnerName());
+						auditOwnerDetails.setCompanyName(ownerObj.getCompanyName());
+						auditOwnerDetails.setId(ownerObj.getId());
+						auditOwnerDetails.setCreatedBy(ownerObj.getCreatedBy());
+						auditOwnerDetails.setCreatedDate(ownerObj.getCreatedDate());
+						auditOwnerDetails.setIsActive("Y");
+						auditOwnerDetailsRepository.updateStatus(ownerObj.getId().toString(), "N");
+						auditOwnerDetailsRepository.save(auditOwnerDetails);
+					}
+				ownerDetailsRepository.deleteOldOwnerDetails(inputObj.getId()+"");
+					for(com.project.json2sql.dto.OwnerDetails ownerObj : ownerDetailsListObj) {
+						ownerDetailsObj = new OwnerDetails();
+						ownerDetailsObj = new OwnerDetails();
+						ownerDetailsObj.setFirstName(ownerObj.getFirstName());
+						ownerDetailsObj.setLastName(ownerObj.getLastName());
+						ownerDetailsObj
+								.setOwnerAddress(ownerObj.getOwnerAddress());
+						ownerDetailsObj.setOwnerName(ownerObj.getOwnerName());
+						ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
+						ownerDetailsObj.setId(inputObj.getId().toString());
+						ownerDetailsObj.setCreatedDate(DateUtil.getCurrentDateTime());
+						ownerDetailsObj.setCreatedBy("System");
+						ownerDetailsObj.setIsActive("Y");
+						ownerDetailsRepository.save(ownerDetailsObj);
+						status = "Y";
+					}
+				} else {
+					if(ownerDetailsListObj.size()>0) {
+						for(com.project.json2sql.dto.OwnerDetails ownerObj : ownerDetailsListObj) {
+							ownerDetailsObj = new OwnerDetails();
+							ownerDetailsObj.setFirstName(ownerObj.getFirstName());
+							ownerDetailsObj.setLastName(ownerObj.getLastName());
+							ownerDetailsObj
+									.setOwnerAddress(ownerObj.getOwnerAddress());
+							ownerDetailsObj.setOwnerName(ownerObj.getOwnerName());
+							ownerDetailsObj.setCompanyName(rootObj.getResponse().getResult().getCompanyName());
+							ownerDetailsObj.setId(inputObj.getId().toString());
+							ownerDetailsObj.setCreatedDate(DateUtil.getCurrentDateTime());
+							ownerDetailsObj.setCreatedBy("System");
+							ownerDetailsObj.setIsActive("Y");
+							ownerDetailsRepository.save(ownerDetailsObj);
+							status = "Y";
+						}
+					}
+				}
 			}
+		}else {
+			logger.info("Already processed for id :: "+propObj.getId());
+			propertiesRepository.updateProcess(propObj.getId()+"", "Y");
+			status = "Y";
 		}
 		return status;
 	}
@@ -115,6 +139,7 @@ public class ProcessServiceHelper {
 		Root rootObj = new Root();
 		OwnerProcess ownerProcessObj = ownerProcess;
 		logger.info("Proxy Execution Start for ID:",inputObj.getId());
+		ownerProcessRepository.deleteOldProcess(inputObj.getId()+"");
 		
 		Properties systemSettings = System.getProperties();
 		systemSettings.setProperty("proxySet", "true");
@@ -141,17 +166,15 @@ public class ProcessServiceHelper {
 			conn.setConnectTimeout(5000);
 
 			// conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+			
+			ObjectMapper mapper = new ObjectMapper();
+			String jsonInString = mapper.writeValueAsString(inputObj);
 
 			OutputStream out = conn.getOutputStream();
 			// out.write(inputObj.toString().getBytes());
-			out.write(inputObj.toString().getBytes("UTF-8"));
-			out.close();
+			out.write(jsonInString.toString().getBytes());
+			//out.close();
 
-			// read the response
-			/*
-			 * InputStream ip = conn.getInputStream(); BufferedReader br1 = new
-			 * BufferedReader(new InputStreamReader(ip));
-			 */
 
 			InputStream in = new BufferedInputStream(conn.getInputStream());
 			String result = IOUtils.toString(in, "UTF-8");
@@ -171,7 +194,11 @@ public class ProcessServiceHelper {
 			ownerProcessObj.setProcessError(conn.getResponseMessage());
 
 			if (conn.getResponseCode() != 200) {
-				throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+				ownerProcessObj.setIsProcess("N");
+			}else {
+				ownerProcessObj.setIsProcess("Y");
+				
+				propertiesRepository.updateProcess(inputObj.getId()+"", "Y");
 			}
 
 			System.out.println("Using proxy:" + conn.usingProxy());

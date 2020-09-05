@@ -183,7 +183,7 @@ public class MainController {
 	public ResponseEntity<?> getScheduleFileByLimit(@PathVariable int offset) {
 		List<ProcessScheduleJson> fileObjList = new ArrayList<ProcessScheduleJson>();
 		try {
-			fileObjList = processService.getAllFileList(10, offset);
+			fileObjList = processService.getAllFileList(pageLimit, offset);
 			return ResponseEntity.status(HttpStatus.OK).body(fileObjList);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
@@ -229,6 +229,32 @@ public class MainController {
 			return ResponseEntity.status(HttpStatus.OK).body(diifMap);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch"+ex);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/getAllSuburbs")
+	@ResponseBody
+	public ResponseEntity<?> getAllSuburbs() {
+		List<String> suburbsListObj = new ArrayList<>();
+		try {
+			suburbsListObj = processService.getAllSuburbs();
+			return ResponseEntity.status(HttpStatus.OK).body(suburbsListObj);
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/getAllPropertiesFromSuburbs/{suburbs}/{id}")
+	@ResponseBody
+	public ResponseEntity<?> getAllPropertiesFromSuburbs(@PathVariable String suburbs, @PathVariable String id) {
+		String status = null;
+		try {
+			status = processService.getAllPropertiesFromSuburbs(suburbs, id);
+			return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\""+status+"\"}");
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}

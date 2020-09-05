@@ -51,6 +51,9 @@ public class ConfigProperties {
 	
 	@Column(name="appcode")
 	private String appcode;
+	
+	@Column(name="maxResult")
+	private String maxResult;
 
 	public long getId() {
 		return id;
@@ -154,6 +157,14 @@ public class ConfigProperties {
 
 	public void setEndtime(String endtime) {
 		this.endtime = endtime;
+	}
+
+	public String getMaxResult() {
+		return maxResult;
+	}
+
+	public void setMaxResult(String maxResult) {
+		this.maxResult = maxResult;
 	}
 
 }

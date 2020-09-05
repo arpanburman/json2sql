@@ -121,7 +121,7 @@ public class OwnerController {
 	public ResponseEntity<?> getOwnerLimit(@PathVariable int offset) {
 		List<OwnerDetails> OwnerObjList = new ArrayList<>();
 		try {
-			OwnerObjList = processService.getAllOwners(pageLimit, offset);
+			OwnerObjList = processService.getAllOwners(10, offset);
 			return ResponseEntity.status(HttpStatus.OK).body(OwnerObjList);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
@@ -215,7 +215,7 @@ public class OwnerController {
 	public ResponseEntity<?> getProcessFailedData(@PathVariable int offset) {
 		List<OwnerProcess> OwnerProcessObjList = new ArrayList<>();
 		try {
-			OwnerProcessObjList = processService.getProcessFailedData(pageLimit, offset);
+			OwnerProcessObjList = processService.getProcessFailedData(10, offset);
 			return ResponseEntity.status(HttpStatus.OK).body(OwnerProcessObjList);
 		} catch (Exception ex) {
 			logger.error("Error Occured while Fetch");
@@ -232,6 +232,34 @@ public class OwnerController {
 			return ResponseEntity.status(HttpStatus.OK).build();
 		} catch (Exception ex) {
 			logger.error("Error Occured while startExecuteProxy");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@PostMapping("/testProxyConfig")
+	@ResponseBody
+	public ResponseEntity<?> testProxyConfig(@RequestBody ConfigurationDto configDtoObj) {
+		logger.info("testProxyConfig Start");
+		String responceCode = null;
+		try {
+			responceCode = processService.testProxy(configDtoObj);
+			return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\""+responceCode+"\"}");
+		} catch (Exception ex) {
+			logger.error("Error Occured while startProxy");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
+		}
+	}
+	
+	@GetMapping("/removeProcessID/{id}")
+	@ResponseBody
+	public ResponseEntity<?> removeProcessID(@PathVariable String id) {
+		logger.info("Remove Process ID:: "+id);
+		String status = "Error: Property Id not Removed";
+		try {
+			status = processService.removeProcessID(id);
+			return ResponseEntity.status(HttpStatus.OK).body("{\"status\":\"'"+status+"'\"}");
+		} catch (Exception ex) {
+			logger.error("Error Occured while Fetch");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"status\":\"Failure\"}");
 		}
 	}

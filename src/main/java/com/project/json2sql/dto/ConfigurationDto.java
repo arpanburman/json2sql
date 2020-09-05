@@ -14,6 +14,7 @@ public class ConfigurationDto {
 	private String starttime;
 	private String endtime;
 	private String frequency;
+	private String maxResult;
 	public String getOp() {
 		return op;
 	}
@@ -85,6 +86,12 @@ public class ConfigurationDto {
 	}
 	public void setEndtime(String endtime) {
 		this.endtime = endtime;
+	}
+	public String getMaxResult() {
+		return maxResult;
+	}
+	public void setMaxResult(String maxResult) {
+		this.maxResult = maxResult;
 	}
 	
 }

@@ -27,4 +27,29 @@ public class ServiceUtil {
 		System.out.println(Hr24 +"::"+ Min);
 		return time;
 	}
+	
+	public static long pageCalculate(long pageNumber, long pageSize, long maxResultNew, long maxResultOld) {
+		long currentPage = 0;
+		if(maxResultNew != maxResultOld) {
+			if(pageNumber < pageSize) {
+				System.out.println("Current Page Calculate"+pageNumber);
+				currentPage = ((pageNumber * maxResultOld) / maxResultNew)+1;
+			}else {
+				currentPage = pageNumber;
+			}
+		}else {
+			currentPage = pageNumber;
+		}
+		return currentPage;
+	}
+	
+	public static long totalPageCalculate(long pageNumber, long pageSize, long maxResultNew, long maxResultOld) {
+		long totalPage = 0;
+		if(pageNumber < pageSize) {
+			System.out.println("Total Page Calculate"+pageNumber);
+			totalPage = ((pageSize * maxResultOld) / maxResultNew);
+		}else {
+		}
+		return totalPage;
+	}
 }

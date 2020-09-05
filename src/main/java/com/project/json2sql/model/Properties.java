@@ -204,6 +204,9 @@ public class Properties {
 	
 	@Column(name="isActive")
 	private String isActive;
+	
+	@Column(name="isProcess")
+	private String isProcess;
 
 	public long getPropertiesId() {
 		return propertiesId;
@@ -715,6 +718,14 @@ public class Properties {
 
 	public void setIsActive(String isActive) {
 		this.isActive = isActive;
+	}
+
+	public String getIsProcess() {
+		return isProcess;
+	}
+
+	public void setIsProcess(String isProcess) {
+		this.isProcess = isProcess;
 	}
 
 	@Override

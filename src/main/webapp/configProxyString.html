@@ -22,15 +22,15 @@
 		$scope.offset = 0;
 		$scope.count = 0;
 		$scope.owners = [];
-		$scope.suburbs = [];
 		$scope.new = {
 			id : ""
 		};
 		$scope.selectedObj = {};
 		
 		_refreshPageData();
-		_refreshTableData();
-		_refreshSuburbsData();
+		_transactionRecordsData();
+		_refreshSkipData();
+		_countTransactionDetails();
 		
 		$scope.testConfig = function(authorization, op, sid, uid, url, ip, port,
 				frequency, loc, appcode){
@@ -49,7 +49,7 @@
 				};
 			$http({
 				method : method,
-				url : 'json2sql/testProxyConfig/',
+				url : 'searchString/testProxyConfig/',
 				data : JSON.stringify(data),
 				headers : {
 					'Content-Type' : 'application/json'
@@ -63,7 +63,7 @@
 		}
 
 		$scope.submitConfig = function(authorization, op, sid, uid, url, ip, port,
-				frequency, loc, appcode, starttime, endtime) {
+				frequency, loc, appcode, starttime, endtime, maxResult) {
 			var method = "POST";
 			var data = {
 					authorization : authorization,
@@ -77,158 +77,45 @@
 					loc : loc,
 					appCode :  appcode,
 					starttime : starttime,
-					endtime : endtime
+					endtime : endtime,
+					maxResult : maxResult
 				};
 		    if((starttime==0 || starttime <=24) && (endtime==0 || endtime <=24) && (endtime > starttime)) {
-		    	$http({
-					method : method,
-					url : 'json2sql/setConfigDetails/',
-					data : JSON.stringify(data),
-					headers : {
-						'Content-Type' : 'application/json'
-					}
-				}).then(function successCallback(response) {
-					$scope.config = response.data;
-					alert("Configuration Processed");
-				}, function errorCallback(response) {
-					console.log(response.statusText);
-				});
+		    	if(null!=maxResult){
+			    	$http({
+						method : method,
+						url : 'searchString/setConfigDetails/',
+						data : JSON.stringify(data),
+						headers : {
+							'Content-Type' : 'application/json'
+						}
+					}).then(function successCallback(response) {
+						$scope.config = response.data;
+						alert("Configuration Processed");
+					}, function errorCallback(response) {
+						console.log(response.statusText);
+					});
+		    	}else{
+		    		alert("Please Enter Max Result");
+		    	}
 		    }else{
 		    	alert("Please Enter Valid Start Time and End Time");
 		    };
 		}
 
-		/* Private Methods */
-		//HTTP GET- get all Config collection
 		function _refreshPageData() {
 			$http({
 				method : 'GET',
-				url : 'json2sql/configDetails'
+				url : 'searchString/configDetails'
 			}).then(function successCallback(response) {
 				$scope.config = response.data;
+				_countTransactionDetails();
 			}, function errorCallback(response) {
 				console.log(response.statusText);
 			});
 			
 		}
-
-		function _refreshTableData() {
-			$http({
-				method : 'GET',
-				url : 'json2sql/getProcessFailedData/' + $scope.offset
-			}).then(function successCallback(response) {
-				$scope.ownerProcesses = response.data;
-				$scope.count= $scope.ownerProcesses.length;
-			}, function errorCallback(response) {
-				console.log(response.statusText);
-			});
-		}
 		
-		function _refreshSuburbsData() {
-			$http({
-				method : 'GET',
-				url : 'json2sql/getAllSuburbs/'
-			}).then(function successCallback(response) {
-				$scope.suburbs = response.data;
-			}, function errorCallback(response) {
-				console.log(response.statusText);
-			});
-		}
-		
-		$scope.report = function(selectedSuburbs,suburbId){
-			var url = null;
-			alert("Processing...");
-			if(suburbId==undefined || suburbId=="" || suburbId == null){
-				suburbId == null;
-				var url = 'json2sql/getAllPropertiesFromSuburbs/'+selectedSuburbs+'/'+null;
-			}else{
-				var url = 'json2sql/getAllPropertiesFromSuburbs/'+selectedSuburbs+'/'+suburbId;
-			}
-			$http({
-				method : 'GET',
-				url : url
-			}).then(function successCallback(response) {
-				alert(response.data.status);
-				_refreshTableData();
-			}, function errorCallback(response) {
-				console.log(response.statusText);
-			});
-		}
-		
-		$scope.nextOffset = function() {
-			if ($scope.offset <= $scope.count) {
-				$scope.offset = $scope.offset + 10;
-				_refreshTableData();
-			}
-		}
-		$scope.prevOffset = function() {
-			if ($scope.offset >= 0) {
-				$scope.offset = $scope.offset - 10;
-				_refreshTableData();
-			}
-		}
-		
-		$scope.submitID = function(id) {
-			$http({
-				method : 'GET',
-				url : 'json2sql/addProcessID/' + id
-			}).then(function successCallback(response) {
-				alert(response.data.status);
-				_clearForm();
-				_refreshTableData();
-			}, function errorCallback(response) {
-				console.log(response.statusText);
-			});
-		}
-		
-		$scope.removeId = function(id) {
-			$http({
-				method : 'GET',
-				url : 'json2sql/removeProcessID/' + id
-			}).then(function successCallback(response) {
-				alert(response.data.status);
-				_clearForm();
-				_refreshTableData();
-			}, function errorCallback(response) {
-				console.log(response.statusText);
-			});
-		}
-		
-		$scope.startProcess = function() {
-			$http({
-				method : 'POST',
-				url : 'json2sql/startExecuteProxy/'
-			}).then(function successCallback(response) {
-				alert("Processed");
-				_refreshTableData();
-			}, function errorCallback(response) {
-				console.log(response.statusText);
-			});
-		}
-		
-		$scope.stopProcess = function() {
-			$http({
-				method : 'POST',
-				url : 'json2sql/stopExecuteProxy/'
-			}).then(function successCallback(response) {
-				alert("Process Stop");
-				_refreshTableData();
-			}, function errorCallback(response) {
-				console.log(response.statusText);
-			});
-		}
-		
-		$scope.runFailedProcess = function(){
-			$http({
-				method : 'POST',
-				url : 'json2sql/runFailedProcess/'
-			}).then(function successCallback(response) {
-				alert("Processed Failed Properties");
-				_refreshTableData();
-			}, function errorCallback(response) {
-				console.log(response.statusText);
-			});
-		}
 		
 		$scope.reset = function() {
 			_refreshPageData();
@@ -237,9 +124,228 @@
 		
 		function _clearForm() {
 			$scope.new.id = "";
+			$scope.new.page = "";
 			$scope.search = "";
 		}
 		
+		$scope.startProcess = function(authorization, op, sid, uid, url,ip, port, frequency, loc, appcode, starttime, endtime,
+				searchString,pageSize,maxResult,pageNumber){
+			alert("Task Processing Start...");
+			var method = "POST";
+			var data = {
+					authorization : authorization,
+					op : op,
+					sid : sid,
+					uid : uid,
+					url : url,
+					ip : ip,
+					port : port,
+					frequency : frequency,
+					loc : loc,
+					appCode :  appcode,
+					starttime : starttime,
+					endtime : endtime,
+					searchString : searchString,
+					pageSize: pageSize,
+					maxResult : maxResult,
+					pageNumber : pageNumber
+				};
+			if(searchString == undefined){
+			    if((starttime==0 || starttime <=24) && (endtime==0 || endtime <=24) && (endtime > starttime)) {
+			    	$http({
+						method : method,
+						url : 'searchString/startExecuteProxyString/',
+						data : JSON.stringify(data),
+						headers : {
+							'Content-Type' : 'application/json'
+						}
+					}).then(function successCallback(response) {
+						$scope.config = response.data;
+						alert("Task Processed");
+						_refreshPageData();
+						_transactionRecordsData();
+					}, function errorCallback(response) {
+						console.log(response.statusText);
+					});
+			    }else{
+			    	alert("Please Enter Valid Start Time and End Time");
+			    };
+			}else{
+		    	$http({
+					method : method,
+					url : 'searchString/startExecuteProxyString/',
+					data : JSON.stringify(data),
+					headers : {
+						'Content-Type' : 'application/json'
+					}
+				}).then(function successCallback(response) {
+					$scope.config = response.data;
+					alert("Task Processed");
+					_refreshPageData();
+					_transactionRecordsData();
+					_countTransactionDetails();
+				}, function errorCallback(response) {
+					console.log(response.statusText);
+				});
+		    };
+		}
+		
+		$scope.stopProcess = function() {
+			$http({
+				method : 'POST',
+				url : 'searchString/stopExecuteProxy/'
+			}).then(function successCallback(response) {
+				alert("Process Stop");
+				_refreshPageData();
+				_countTransactionDetails();
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
+		$scope.submitID = function(id, page) {
+			var method = "POST";
+			var data = {
+					searchString : id,
+					pageNumber : page,
+					isProcess : "Y"
+				};
+			$http({
+				method : method,
+				url : 'searchString/addSkipSearchString/',
+				data : JSON.stringify(data),
+				headers : {
+					'Content-Type' : 'application/json'
+				}
+			}).then(function successCallback(response) {
+				$scope.skipDatas = response.data;
+				alert("Inserted");
+				_clearForm();
+				_refreshPageData();
+				_refreshSkipData();
+				_countTransactionDetails();
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
+		$scope.removeId = function(id) {
+			var method = "POST";
+			var data = {
+					searchString : id
+				};
+			$http({
+				method : method,
+				url : 'searchString/deleteSkipSearchString/',
+				data : JSON.stringify(data),
+				headers : {
+					'Content-Type' : 'application/json'
+				}
+			}).then(function successCallback(response) {
+				$scope.skipDatas = response.data;
+				alert("Deleted");
+				_clearForm();
+				_refreshPageData();
+				_refreshSkipData();
+				_countTransactionDetails();
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
+		function _refreshSkipData() {
+			$http({
+				method : 'GET',
+				url : 'searchString/skipSearchString/'
+			}).then(function successCallback(response) {
+				$scope.skipDatas = response.data;
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
+		function _transactionRecordsData() {
+			$http({
+				method : 'GET',
+				url : 'searchString/processTransactionDetails/'+ $scope.offset
+			}).then(function successCallback(response) {
+				$scope.processRecords= response.data;
+				_countTransactionDetails();
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
+		$scope.nextOffset = function() {
+			if ($scope.offset <= $scope.count) {
+				$scope.offset = $scope.offset + 10;
+				_transactionRecordsData();
+			}
+		}
+		$scope.prevOffset = function() {
+			if ($scope.offset >= 0) {
+				$scope.offset = $scope.offset - 10;
+				_transactionRecordsData();
+			}
+		}
+		$scope.runFailedProcess = function(){
+			alert("Processing Start...");
+			$http({
+				method : 'POST',
+				url : 'searchString/runFailedProcess/'
+			}).then(function successCallback(response) {
+				alert("Processed..");
+				_refreshTableData();
+				_transactionRecordsData();
+				_countTransactionDetails();
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
+		$scope.runAgainProcess = function(searchString, pageNumber, pageSize, maxResult){
+			alert("Re-Run Processing Start...");
+			var method = "POST";
+			var data = {
+					searchString : searchString,
+					pageNumber : pageNumber,
+					pageSize : pageSize,
+					maxResult : maxResult
+				};
+	    	$http({
+				method : method,
+				url : 'searchString/startReRunProxyString/',
+				data : JSON.stringify(data),
+				headers : {
+					'Content-Type' : 'application/json'
+				}
+			}).then(function successCallback(response) {
+				$scope.config = response.data.status;
+				alert("Task Processed Staus::"+$scope.config);
+				_transactionRecordsData();
+				_refreshPageData();
+				_countTransactionDetails();
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
+		
+		$scope.refresh= function(){
+			_transactionRecordsData();
+			_refreshPageData();
+			_countTransactionDetails();
+		}
+		
+		function _countTransactionDetails() {
+			$http({
+				method : 'GET',
+				url : 'searchString/countTransactionDetails/'
+			}).then(function successCallback(response) {
+				$scope.count = response.data.status;
+			}, function errorCallback(response) {
+				console.log(response.statusText);
+			});
+		}
 	});
 </script>
 <style>
@@ -335,11 +441,11 @@ body {
 					<li><a href="propertyList.html">Property List</a></li>
 					<li><a href="auditPropertyList.html">Audit Property List</a></li>
 					<li><a href="ownerList.html">Owner List</a></li>
-					<li class="active"><a href="configProxy.html">Configure
+					<li><a href="configProxy.html">Configure
 							Proxy</a></li>
 					<li><a href="SchedulerFile.html">Processed File List</a></li>
 					<li><a href="searchString.html">Search String List</a></li>
-					<li><a href="configProxyString.html">Configure
+					<li class="active"><a href="configProxyString.html">Configure
 							Search String</a></li>
 				</ul>
 			</div>
@@ -415,6 +521,12 @@ body {
 									placeholder="Frequency Value" ng-model="config.frequency">
 							</div>
 							<div class="form-group">
+								<label for="exampleInputEmail1">Max Result</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="Max Result value"
+									ng-model="config.maxResult">
+							</div>
+							<div class="form-group">
 								<label for="exampleInputEmail1">Start Timer</label>
 								<input type="text" class="timepicker" name="starttime" placeholder="24 hour format" 
 								ng-model="config.starttime"/>
@@ -425,72 +537,120 @@ body {
 								placeholder="24 hour format" ng-model="config.endtime"/>
 							</div>
 							<button type="submit" class="btn btn-primary btn-large center"
-								ng-click="submitConfig(config.authorization, config.op, config.sid, config.uid, config.url,config.ip, config.port, config.frequency, config.loc, config.appcode, config.starttime, config.endtime)">Save
+								ng-click="submitConfig(config.authorization, config.op, config.sid, config.uid, config.url,config.ip, config.port, config.frequency, config.loc, config.appcode, config.starttime, config.endtime,config.maxResult)">Save
 								Configuration</button>
 							<button type="submit" class="btn btn-primary btn-large center"
 								ng-click="testConfig(config.authorization, config.op, config.sid, config.uid, config.url,config.ip, config.port, config.frequency, config.loc, config.appcode)">Test Connection</button>
 						</form>
 						<hr>
+						<h3>Required Details for Run Search String</h3>
+						<form name ="myForm">
+							<div class="form-group">
+								<label for="exampleInputEmail1">Search String ID</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="Search String value (Optional)"
+									ng-model="config.searchString">
+							</div>
+							<div class="form-group">
+								<label for="exampleInputEmail1">Page Size</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="Page Size (Optional)"
+									ng-model="config.pageSize">
+							</div>
+							<div class="form-group">
+								<label for="exampleInputEmail1">Page Number ID</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="Page Number value (Optional)"
+									ng-model="config.pageNumber">
+							</div>
+						</form>
 						<button type="submit" class="btn btn-primary btn-large center"
-							ng-click="startProcess()">Start Process</button>
+							ng-click="startProcess(config.authorization, config.op, config.sid, config.uid, config.url,config.ip, config.port, config.frequency, config.loc, config.appcode, config.starttime, config.endtime,
+							config.searchString,config.pageSize,config.maxResult,config.pageNumber)">Start Process</button>
 						<button type="submit" class="btn btn-primary btn-large center"
 							ng-click="stopProcess()">Stop Process</button>
 						<hr>
 						<form>
+						<h3>Submit Search String to Skip</h3>
 							<div class="form-group">
-								<label for="exampleInputEmail1">Submit ID for Process</label> <input
+								<label for="exampleInputEmail1">Search String ID</label> <input
 									class="form-control form-control-sm" type="text"
-									placeholder="Submit Id Here" ng-model="new.id">
+									placeholder="SearchString Id Here" ng-model="new.id">
 							</div>
-
+							<!-- <div class="form-group">
+								<label for="exampleInputEmail1">Search String Page</label> <input
+									class="form-control form-control-sm" type="text"
+									placeholder="SearchString Page Here" ng-model="new.page">
+							</div> -->
 							<button type="submit" class="btn btn-primary btn-large center"
-								ng-click="submitID(new.id)">Sumbit Id</button>
+								ng-click="submitID(new.id,new.page)">Sumbit Id</button>
 							<button type="submit" class="btn btn-primary btn-large center"
 								ng-click="removeId(new.id)">Remove Id</button>
 						</form>
-						<hr>
-						<h3>Select Priority Suburbs:</h3>
-						<label for="submitId">Select Suburb</label>
-							<select ng-model="selectedSuburbs" class="custom-select">
-								<option ng-repeat="x in suburbs" value="{{x}}">{{x}}</option>
-							</select> 
-							<label for="submitId">Submit ID (Optional)</label> 
-							<input
-								type="text" name="suburbId" placeholder="Provide ID (Optional)"
-								ng-model="suburbId" />
-							<button type="submit" class="btn btn-primary btn-large center"
-								ng-click="report(selectedSuburbs,suburbId)">Start Suburb</button>
-							<button type="submit" class="btn btn-primary btn-large center"
-								ng-click="stopProcess()">Stop Suburb</button>
-						<hr>
+						<hr/>
+						<div class="card-body">
+							<h3>Skip Records:</h3>
+							<table class="table table-striped">
+								<tr>
+									<th>Search String</th>
+									<th>Is Process</th>
+									<th>Action</th>
+								</tr>
+
+								<tr ng-repeat="skipData in skipDatas | filter:search">
+									<td>{{ skipData.searchString }}</td>
+									<td>{{ skipData.isProcess }}</td>
+									<td><button type="submit" class="btn btn-primary btn-large center"
+										ng-click="removeId(skipData.searchString)">Remove</button></td>
+								</tr>
+
+							</table>
+						</div>
+						<hr/>
 						<div class="card-body">
 							<h3>Processed Table Shows Below (Failed & Success):</h3>
+							
+							<table class="table table-striped">
+								<tr>
+									<th>Search String</th>
+									<th>Page Number</th>
+									<th>Page Size</th>
+									<th>Max Result</th>
+									<th>Processed?</th>
+									<th>Res Code</th>
+									<th>Res Error</th>
+									<th>Created Date</th>
+									<th>Action</th>
+								</tr>
+
+								<tr ng-repeat="processRecord in processRecords | filter:search">
+									<td>{{ processRecord.searchString }}</td>
+									<td>{{ processRecord.pageNumber }}</td>
+									<td>{{ processRecord.pageSize }}</td>
+									<td>{{ processRecord.maxResult }}</td>
+									<td>{{ processRecord.isProcess }}</td>
+									<td>{{ processRecord.processCode }}</td>
+									<td>{{ processRecord.errorLog }}</td>
+									<td>{{ processRecord.createdDate }}</td>
+									<td><button type="submit" class="btn btn-primary btn-large center"
+										ng-click="runAgainProcess(processRecord.searchString, processRecord.pageNumber,
+										processRecord.pageSize, processRecord.maxResult)">Re-Run</button></td>
+								</tr>
+
+							</table>
 							<ul class="pager">
 								<li class="previous"><button type="button"
 										class="btn btn-primary" ng-click="prevOffset()">Previous</button></li>
 								<li class="next"><button type="button"
 										class="btn btn-primary" ng-click="nextOffset()">Next</button></li>
 							</ul>
-							<table class="table table-striped">
-								<tr>
-									<th>ID</th>
-									<th>Created Date</th>
-									<th>Is Process</th>
-									<th>Process Code</th>
-									<th>Process Error</th>
-								</tr>
-
-								<tr ng-repeat="ownerProcess in ownerProcesses | filter:search">
-									<td>{{ ownerProcess.id }}</td>
-									<td>{{ ownerProcess.createdDate }}</td>
-									<td>{{ ownerProcess.isProcess }}</td>
-									<td>{{ ownerProcess.processCode }}</td>
-									<td>{{ ownerProcess.processError }}</td>
-								</tr>
-
-							</table>
-							<button type="submit" class="btn btn-primary btn-large center"
-								ng-click="runFailedProcess()">Run Failed Process</button>
+							<hr/>
+							<ul class="pager">
+							<li class="rerun"><button type="submit" class="btn btn-primary btn-large center"
+								ng-click="runFailedProcess()">Run Failed Process</button></li>
+							<li class="refresh"><button type="button"
+										class="btn btn-primary" ng-click="refresh()">Refresh</button></li>
+							</ul>
 						</div>
 					</div>
 				</div>

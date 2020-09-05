@@ -50,7 +50,11 @@ public class ExecuteProxyTask implements Callable<String> {
 		} catch (Exception e) {
 			status = "N";
 			ownerProcessObj.setIsProcess(status);
-			ownerProcessObj.setProcessError(e.getMessage());
+			if(e.getMessage().equalsIgnoreCase("Index: 0, Size: 0")) {
+				ownerProcessObj.setProcessError("No record Available");
+			}else {
+				ownerProcessObj.setProcessError(e.getMessage());
+			}
 			processServiceHelper.saveFailedData(ownerProcessObj);
 			logger.error("Error in Proxy Service " + e.getMessage());
 		}

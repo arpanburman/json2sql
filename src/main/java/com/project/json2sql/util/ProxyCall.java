@@ -1,14 +1,21 @@
 package com.project.json2sql.util;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.project.json2sql.dto.ConfigurationDto;
 import com.project.json2sql.dto.InputProxyDto;
 import com.project.json2sql.dto.Root;
 import com.project.json2sql.model.ConfigProperties;
@@ -16,8 +23,8 @@ import com.project.json2sql.model.OwnerProcess;
 
 public class ProxyCall {
 	
-/*
-	public static void main(String s[]) throws Exception {
+
+	/*public static void main(String s[]) throws Exception {
 		try {
 			Properties systemSettings = System.getProperties();
 			systemSettings.put("proxySet", "true");
@@ -121,5 +128,73 @@ public class ProxyCall {
 		}
 		
 		return rootObj;
+	}
+	
+	public static String testProxy(ConfigurationDto configDtoObj)
+			throws Exception {
+		System.out.println("Proxy Test Start");
+		String responce = null;
+		
+		Properties systemSettings = System.getProperties();
+		//systemSettings.setProperty("proxySet", "true");
+		//systemSettings.setProperty("http.proxyHost", configDtoObj.getIp());
+		//systemSettings.setProperty("http.proxyPort", configDtoObj.getPort());
+		
+		URL u = new URL(configDtoObj.getUrl());
+		HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+		Root rootObj = new Root();
+		try {
+			conn.setDoOutput(true);
+			conn.setInstanceFollowRedirects(false);
+			conn.setRequestMethod("POST");
+			conn.setRequestProperty("Content-Type", "application/json");
+			conn.setRequestProperty("charset", "utf-8");
+			conn.setRequestProperty("Authorization", configDtoObj.getAuthorization());
+			conn.setRequestProperty("Accept", "application/json");
+			conn.setRequestProperty("Accept-Encoding", "application/gzip");
+			conn.setRequestProperty("Cache-Control", "no-cache");
+			// conn.setRequestProperty( "User-Agent", "");
+			conn.setUseCaches(false);
+			conn.setDoOutput(true);
+			conn.setDoInput(true);
+			conn.setConnectTimeout(5000);
+			
+			InputProxyDto inputObj = new InputProxyDto();
+			
+			inputObj.setAppCode(configDtoObj.getAppCode());
+			inputObj.setLoc(configDtoObj.getLoc());
+			inputObj.setOp(configDtoObj.getOp());
+			inputObj.setSid(configDtoObj.getSid());
+			inputObj.setUid(configDtoObj.getUid());
+			
+			ObjectMapper mapper = new ObjectMapper();
+			String jsonInString = mapper.writeValueAsString(inputObj);
+			
+			OutputStream out = conn.getOutputStream();
+			out.write(jsonInString.toString().getBytes());
+			//out.close();
+
+			InputStream in = new BufferedInputStream(conn.getInputStream());
+			String result = IOUtils.toString(in, "UTF-8");
+			
+			System.out.println(conn.getResponseCode() + " : " + conn.getResponseMessage());
+			System.out.println(conn.getResponseCode() == HttpURLConnection.HTTP_OK);
+			responce=conn.getResponseCode() + " : " + conn.getResponseMessage();
+			if (conn.getResponseCode() != 200) {
+				throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+			}
+
+			System.out.println("Using proxy:" + conn.usingProxy());
+			
+		} catch (Exception e) {
+			if(null == e.getCause()) {
+				responce = "Unknown Host : "+e.getMessage();
+			}
+			System.out.println(false);
+		} finally {
+			conn.disconnect();
+		}
+
+		return responce;
 	}
 }

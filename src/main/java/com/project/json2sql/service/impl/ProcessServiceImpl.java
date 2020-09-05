@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -280,6 +281,7 @@ public class ProcessServiceImpl implements ProcessService {
 						propertiesObj.setUpdatedBy("System");
 						propertiesObj.setProcessId(processJson.getProcessId());
 						propertiesObj.setIsActive("Y");
+						propertiesObj.setIsProcess("N");
 
 						propertiesObj = propertiesRepository.save(propertiesObj);
 
@@ -347,6 +349,7 @@ public class ProcessServiceImpl implements ProcessService {
 						propertiesObj.setCreatedBy("System");
 						propertiesObj.setProcessId(processJson.getProcessId());
 						propertiesObj.setIsActive("Y");
+						propertiesObj.setIsProcess("N");
 
 						propertiesObj = propertiesRepository.save(propertiesObj);
 
@@ -735,12 +738,13 @@ public class ProcessServiceImpl implements ProcessService {
 	public void multiThreadExecuteProxy() throws Exception {
 		try {
 			service = Executors.newFixedThreadPool(THREAD_POOL_VALUE);
-			List<Properties> propObjList = propertiesJpaRepository.findAll();
+			List<Properties> propObjList = propertiesRepository.getInactiveProperties("N");
 			ConfigProperties configPropertiesObj = new ConfigProperties();
 			configPropertiesObj = configPropertiesRepository.fetchById(1);
 			List<Future<String>> resultList = null;
 			List<ExecuteProxyTask> taskList = new ArrayList<ExecuteProxyTask>();
 			logger.info("Create Task list Started:::");
+			configPropertiesRepository.updateStopConfigDetails(1,null);
 			createTaskListProcess(configPropertiesObj, propObjList, taskList);
 			resultList = service.invokeAll(taskList);
 		} catch (Exception e) {
@@ -760,6 +764,7 @@ public class ProcessServiceImpl implements ProcessService {
 
 	@Override
 	public void stopMultiThreadExecuteProxy() throws InterruptedException {
+		configPropertiesRepository.updateStopConfigDetails(1,null);
 		if (null != service && !service.isShutdown()) {
 			service.shutdownNow();
 		}
@@ -819,8 +824,80 @@ public class ProcessServiceImpl implements ProcessService {
 		} catch (Exception e) {
 			logger.error("Error in multiThreadReRunFailedExecuteProxy Service" + e);
 		} finally {
+			configPropertiesRepository.updateStopConfigDetails(1,null);
 			service.shutdown();
 		}
+	}
+
+	@Override
+	public List<String> getAllSuburbs() {
+		List<String> suburbsListObj = new ArrayList<>();
+		try {
+			suburbsListObj = (List<String>) propertiesRepository.getAllSuburbs();
+		} catch (Exception e) {
+			logger.error("Error in Property getAllSuburbs Service" + e);
+		}
+		return suburbsListObj;
+	}
+	
+	@Override
+	public String getAllPropertiesFromSuburbs(String suburbs, String id) {
+		List<Properties> propObjList = new ArrayList<>();
+		String status = null;
+		try {
+			if(!id.equalsIgnoreCase("null"))
+				propObjList = (List<Properties>) propertiesRepository.getAllPropertiesFromSuburbsWithId(suburbs, id);
+			else
+				propObjList = (List<Properties>) propertiesRepository.getAllPropertiesFromSuburbs(suburbs);
+			
+			if(propObjList.size()>0) {
+				logger.info("Size of Property list:: "+propObjList.size());
+				try {
+					service = Executors.newFixedThreadPool(THREAD_POOL_VALUE);
+					ConfigProperties configPropertiesObj = new ConfigProperties();
+					configPropertiesObj = configPropertiesRepository.fetchById(1);
+					List<Future<String>> resultList = null;
+					List<ExecuteProxyTask> taskList = new ArrayList<ExecuteProxyTask>();
+					logger.info("Create Task list Started:::");
+					createTaskListProcess(configPropertiesObj, propObjList, taskList);
+					resultList = service.invokeAll(taskList);
+				} catch (Exception e) {
+					status = "Error during Suburbs process, Coneect with IT team";
+					logger.error("Error in multiThreadExecuteProxy Service" + e);
+				} finally {
+					configPropertiesRepository.updateStopConfigDetails(1,null);
+					service.shutdown();
+					status = "All data has been processed";
+				}
+			}else {
+				status= "No data available for this Suburbs / ID combination";
+			}
+		} catch (Exception e) {
+			status = "Error during Suburbs process, Coneect with IT team";
+			logger.error("Error in Property getAllSuburbs Service" + e);
+		}
+		return status;
+	}
+
+	@Override
+	public String testProxy(ConfigurationDto configDtoObj) throws Exception {
+		String responceCode = ProxyCall.testProxy(configDtoObj);
+		return responceCode;
+	}
+
+	@Override
+	public String removeProcessID(String id) {
+		String status = "Property ID not available";
+		try {
+			if (null != id) {
+				ownerProcessRepository.deleteOldProcess(id);
+				status = "Property ID Remove from Log process table";
+			}
+		} catch (Exception e) {
+			status = "Error: Property ID not Removed";
+			logger.error("Process ID not Removed", e);
+		}
+		return status;
 	}
 	
 

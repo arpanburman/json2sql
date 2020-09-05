@@ -1,0 +1,368 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Json 2 sql Converts Data</title>
+<!-- Load AngularJS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script
+	src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script type="text/javascript">
+            var app = angular.module("UserManagement", []);
+         
+            //Controller Part
+            app.controller("UserManagementController", function($scope, $http) {
+                $scope.form = {
+                    id : ""
+                };
+                $scope.offset = 0;
+                $scope.count = 0;
+                
+                $scope.offsetString = 0;
+                $scope.countString = 0;
+                
+                _refreshTableData();
+                _refreshStringData();
+                _countData();
+                
+                $scope.reset = function() {
+                    _clearForm();
+                    _refreshTableData();
+                    _refreshStringData();
+                    _countData();
+                }
+                        
+                //Clear the form
+                function _clearForm() {
+                    $scope.form.id = "";
+                    $scope.search="";
+                };
+                
+                $scope.uploadFile = function() {
+                	console.log(document.getElementById('file').files.length);
+                	for (var i = 0; i < document.getElementById('file').files.length; i++){
+                		var f = document.getElementById('file').files[i];
+	                	$http({
+	                        url: 'searchString/uploadFile',
+	                        method: "POST",
+	                        headers: { 'Content-Type': undefined },
+	                        transformRequest: function (data) {
+	                            var formData = new FormData();
+	                            //formData.append("model", angular.toJson(data.model));
+	                            formData.append("file", f);
+	                            return formData;
+	                        },
+	                        data: { files: file }
+	                    }).then(function (response) {
+	                    	alert(response.data.status);
+	                    	_refreshTableData();
+	                    	_refreshStringData();
+	                    	console.log(response.data);
+	                    });
+                	}
+                	$("#file").val('');
+                };
+                
+                function _refreshTableData() {
+        			$http({
+        				method : 'GET',
+        				url : 'searchString/getUploadedStringFileByLimit/' + $scope.offset
+        			}).then(function successCallback(response) {
+        				$scope.files = response.data;
+        				$scope.count= $scope.files;
+        			}, function errorCallback(response) {
+        				console.log(response.statusText);
+        			});
+        		}
+                
+                function _refreshStringData(){
+                	$http({
+        				method : 'GET',
+        				url : 'searchString/getSearchStringByLimit/' + $scope.offsetString
+        			}).then(function successCallback(response) {
+        				$scope.strings = response.data;
+        			}, function errorCallback(response) {
+        				console.log(response.statusText);
+        			});
+                }
+                
+                $scope.nextOffset = function() {
+        			if ($scope.offset <= $scope.count) {
+        				$scope.offset = $scope.offset + 10;
+        				_refreshTableData();
+        			}
+        		}
+        		$scope.prevOffset = function() {
+        			if ($scope.offset >= 0) {
+        				$scope.offset = $scope.offset - 10;
+        				_refreshTableData();
+        			}
+        		}
+        		
+        		 $scope.nextOffsetString = function() {
+         			if ($scope.offsetString <= $scope.countString) {
+         				$scope.offsetString = $scope.offsetString + 10;
+         				_refreshStringData();
+         			}
+         		}
+         		$scope.prevOffsetString = function() {
+         			if ($scope.offsetString >= 0) {
+         				$scope.offsetString = $scope.offsetString - 10;
+         				_refreshStringData();
+         			}
+         		}
+         		
+         		$scope.submitID = function() {
+
+        			var method = "";
+        			var url = "";
+        			if ($scope.form.id != null) {
+        				method = "GET";
+        				url = 'searchString/getSearchStringById/' + $scope.form.id;
+        			}else{
+        				alert("Enter Search String");
+        			}
+
+        			$http({
+        				method : method,
+        				url : url,
+        				data : angular.toJson($scope.form),
+        				headers : {
+        					'Content-Type' : 'application/json'
+        				}
+        			}).then(function successCallback(response) {
+        				$scope.strings = response.data;
+        			}, function errorCallback(response) {
+        				console.log(response.statusText);
+        			});
+        		};
+                
+        		function _countData() {
+        			$http({
+        				method : 'GET',
+        				url : 'searchString/countSearchString'
+        			}).then(function successCallback(response) {
+        				$scope.countString = response.data;
+        				if($scope.countString == 0){
+        					alert("No Search String Available");
+        				}
+        			}, function errorCallback(response) {
+        				console.log(response.statusText);
+        			});
+        		}
+            });
+        </script>
+<style>
+.button {
+	cursor: pointer;
+	color: blue;
+}
+
+tr:nth-of-type(odd) {
+	background: #eee;
+}
+
+th {
+	background: #286090;
+	color: white;
+	font-weight: bold;
+}
+
+td, th {
+	border: 1px solid #ccc;
+	width: 25%;
+	text-align: left;
+}
+
+table {
+	width: 600px;
+	border-collapse: collapse;
+}
+
+h1 {
+	text-align: center;
+}
+
+.navbar {
+	margin-bottom: 0;
+	border-radius: 0;
+}
+/* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+.row.content {
+	height: 450px
+}
+
+/* Set gray background color and 100% height */
+.sidenav {
+	padding-top: 20px;
+	background-color: #ffffff;
+	height: 100%;
+	left: 0;
+	bottom: 0;
+}
+
+/* Set black background color, white text and some padding */
+footer {
+	background-color: #555;
+	color: white;
+	padding: 15px;
+	width: 100%;
+	position: fixed;
+	left: 0;
+	bottom: 0;
+}
+
+/* On small screens, set height to 'auto' for sidenav and grid */
+@media screen and (max-width: 100%) {
+	.sidenav {
+		height: auto;
+		padding: 15px;
+	}
+	.row.content {
+		height: auto;
+	}
+}
+</style>
+<head>
+<body ng-app="UserManagement" ng-controller="UserManagementController">
+	<nav class="navbar navbar-inverse">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse"
+					data-target="#myNavbar"></button>
+				<a class="navbar-brand" href="#">JSON to SQL Convert Data</a>
+			</div>
+			<div class="collapse navbar-collapse" id="myNavbar">
+				<ul class="nav navbar-nav">
+					<li><a href="index.html">Home</a></li>
+					<li><a href="propertyList.html">Property List</a></li>
+					<li><a href="auditPropertyList.html">Audit Property
+							List</a></li>
+					<li><a href="ownerList.html">Owner List</a></li>
+					<li><a href="configProxy.html">Configure Proxy</a></li>
+					<li><a href="SchedulerFile.html">Processed File List</a></li>
+					<li class="active"><a href="searchString.html">Search String List</a></li>
+					<li><a href="configProxyString.html">Configure
+							Search String</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+
+	<div class="container-fluid text-center">
+		<div class="row content">
+			<div class="col-sm-2 sidenav">
+				<!-- <p>
+					<a href="#">Link</a>
+				</p>
+				<p>
+					<a href="#">Link</a>
+				</p>
+				<p>
+					<a href="#">Link</a>
+				</p>-->
+			</div>
+			<div class="col-sm-8 text-centre">
+				<div class="card text-primary border-primary border-right-0">
+					<div class="card-body">
+						<h3>Upload Search String File</h3>
+						<form id='uploadForm' class="form-inline">
+							<div class="form-group">
+								<input type="file" id="file" name="file" multiple="multiple"
+									ng-model="form.upload" class="form-control" />
+								<button ng-click="uploadFile();this.form.reset()"
+									class="btn btn-primary btn-large center">Upload</button>
+								<button onClick="this.form.reset()"
+									class="btn btn-primary btn-large center">Clear Files</button>
+							</div>
+						</form>
+						<hr />
+						<div class="card-body">
+							<h3>Processed File Table Shows Below (Failed & Success):</h3>
+							<ul class="pager">
+								<li class="previous"><button type="button"
+										class="btn btn-primary" ng-click="prevOffset()">Previous</button></li>
+								<li class="next"><button type="button"
+										class="btn btn-primary" ng-click="nextOffset()">Next</button></li>
+							</ul>
+							<table class="table table-striped">
+								<tr>
+									<th>ID</th>
+									<th>File Name</th>
+									<th>Description</th>
+									<th>Created Date</th>
+									<th>Is Process</th>
+									<th>Status</th>
+								</tr>
+
+								<tr ng-repeat="file in files | filter:search">
+									<td>{{ file.id }}</td>
+									<td>{{ file.fileName }}</td>
+									<td>{{ file.msg }}</td>
+									<td>{{ file.createdDate }}</td>
+									<td>{{ file.isProcess }}</td>
+									<td>{{ file.status }}</td>
+								</tr>
+							</table>
+						</div>
+						<hr/>
+						<h3>Search String from List</h3>
+						<form ng-submit="submitID()" class="form-inline">
+							<div class="form-group">
+								<label>Search With String:</label> <input type="text"
+									ng-model="form.id" placeholder="Enter a SearchString:"
+									class="form-control" />&nbsp; <input type="submit"
+									value="Submit" class="btn btn-primary btn-large center" />&nbsp;
+								<button class="btn btn-primary btn-large center" type="reset"
+									ng-click="reset()">Reset</button>
+							</div>
+						</form>
+						<hr/>
+						<div class="card-body">
+							<h3>Processed Search String:</h3>
+							<h3>Search String Count : {{countString}}</h3>
+							<ul class="pager">
+								<li class="previous"><button type="button"
+										class="btn btn-primary" ng-click="prevOffsetString()">Previous</button></li>
+								<li class="next"><button type="button"
+										class="btn btn-primary" ng-click="nextOffsetString()">Next</button></li>
+							</ul>
+							<table class="table table-striped">
+								<tr>
+									<th>ID</th>
+									<th>Search String</th>
+									<th>Created Date</th>
+									<th>Total Page</th>
+									<th>Last Read Page</th>
+								</tr>
+
+								<tr ng-repeat="string in strings | filter:search">
+									<td>{{ string.id }}</td>
+									<td>{{ string.searchString }}</td>
+									<td>{{ string.createdDate }}</td>
+									<td>{{ string.endPage }}</td>
+									<td>{{ string.lastReadPage }}</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-2 sidenav">
+				<!-- <div class="well">
+					<p>ADS</p>
+				</div>
+				<div class="well">
+					<p>ADS</p>
+				</div>-->
+			</div>
+		</div>
+	</div>
+</body>
+</html>

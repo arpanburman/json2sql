@@ -199,6 +199,9 @@ footer {
 					<li><a href="ownerList.html">Owner List</a></li>
 					<li><a href="configProxy.html">Configure Proxy</a></li>
 					<li><a href="SchedulerFile.html">Processed File List</a></li>
+					<li><a href="searchString.html">Search String List</a></li>
+					<li><a href="configProxyString.html">Configure
+							Search String</a></li>
 				</ul>
 			</div>
 		</div>
@@ -244,6 +247,7 @@ footer {
 					<tr>
 						<th>Id</th>
 						<th>Type</th>
+						<th>Lat</th>
 						<th>Lon</th>
 						<th>Unit Number</th>
 						<th>Street Number</th>
@@ -304,6 +308,7 @@ footer {
 					<tr ng-repeat="employee in employees | filter:search">
 						<td>{{ employee.id }}</td>
 						<td>{{ employee.type }}</td>
+						<td>{{ employee.lat }}</td>
 						<td>{{ employee.lon }}</td>
 						<td>{{ employee.unitNumber}}</td>
 						<td>{{ employee.streetNumber}}</td>
