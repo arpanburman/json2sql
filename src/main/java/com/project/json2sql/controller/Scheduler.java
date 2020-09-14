@@ -57,7 +57,7 @@ public class Scheduler {
 	public static final Logger logger = LoggerFactory.getLogger(ExecuteProxyTask.class);
 
 	//@Async
-	@Scheduled(cron = "0 0/1 * * * ?")
+	//@Scheduled(cron = "0 0/1 * * * ?")
 	public void cronJobSch() {
 		System.out.println("Properties cron job expression:: " + DateUtil.getCurrentDateTime());
 		schedulerService.processJsonUploadJob();

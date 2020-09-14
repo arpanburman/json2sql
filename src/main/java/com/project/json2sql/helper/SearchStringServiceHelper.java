@@ -81,7 +81,7 @@ public class SearchStringServiceHelper {
 			if(time.get("hour") >= Integer.parseInt(configProxyRequestDto.getStarttime()) && time.get("hour") < Integer.parseInt(configProxyRequestDto.getEndtime())) {
 				mainJsonProxyObj = callProxy(configProxyRequestDto);
 				if(null != mainJsonProxyObj) {
-					isProcess = savePropertiesData(mainJsonProxyObj);
+					//isProcess = savePropertiesData(mainJsonProxyObj);
 					searchStringRecordsRepository.updateSearchString(configProxyRequestDto.getSearchString(), mainJsonProxyObj.getResponse().getResult().getPages().getCurrentPage());
 				}
 			}else{
@@ -191,7 +191,7 @@ public class SearchStringServiceHelper {
 				}else {
 					logger.info("String Process for :::::: "+configProxyRequestDto.getSearchString());
 					mainJsonObj = g.fromJson(result, MainJson.class);
-					//savePropertiesInFile(result, configProxyRequestDto.getSearchString(), page, maxResult);
+					savePropertiesInFile(result, configProxyRequestDto.getSearchString(), page, maxResult);
 					PageTransactionObj.setIsProcess("Y");
 				}
 	
@@ -209,19 +209,21 @@ public class SearchStringServiceHelper {
 				pageTransactionRepository.save(PageTransactionObj);
 				
 				//Save in Page Details
-				int pageDetailsCount = pageStringDetailsRepository.countSearchString(configProxyRequestDto.getSearchString());
-				if(pageDetailsCount == 0) {
-					PageStringDetails pageStringDetailsObj = new PageStringDetails();
-					pageStringDetailsObj.setSearchString(configProxyRequestDto.getSearchString());
-					pageStringDetailsObj.setPageNumber(page);
-					pageStringDetailsObj.setPageSize(Long.parseLong(configProxyRequestDto.getPageSize()));
-					pageStringDetailsObj.setMaxResult(maxResult);
-					pageStringDetailsObj.setUpdatedDate(DateUtil.getCurrentDateTime());
-					pageStringDetailsRepository.save(pageStringDetailsObj);
-				}else {
-					pageStringDetailsRepository.updatePageByString(configProxyRequestDto.getSearchString(), 
-							page, Long.parseLong(configProxyRequestDto.getPageSize()), 
-							maxResult, DateUtil.getCurrentDateTime());
+				if(!configProxyRequestDto.getKey().equalsIgnoreCase("FAILED")) {
+					int pageDetailsCount = pageStringDetailsRepository.countSearchString(configProxyRequestDto.getSearchString());
+					if(pageDetailsCount == 0) {
+						PageStringDetails pageStringDetailsObj = new PageStringDetails();
+						pageStringDetailsObj.setSearchString(configProxyRequestDto.getSearchString());
+						pageStringDetailsObj.setPageNumber(page);
+						pageStringDetailsObj.setPageSize(Long.parseLong(configProxyRequestDto.getPageSize()));
+						pageStringDetailsObj.setMaxResult(maxResult);
+						pageStringDetailsObj.setUpdatedDate(DateUtil.getCurrentDateTime());
+						pageStringDetailsRepository.save(pageStringDetailsObj);
+					}else {
+						pageStringDetailsRepository.updatePageByString(configProxyRequestDto.getSearchString(), 
+								page, Long.parseLong(configProxyRequestDto.getPageSize()), 
+								maxResult, DateUtil.getCurrentDateTime());
+					}
 				}
 				conn.disconnect();
 			}

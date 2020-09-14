@@ -77,7 +77,7 @@ public class SearchStringServiceImpl implements SearchStringService{
 
 	private static final int THREAD_POOL_VALUE = 1;
 	
-	private static final int ALL_THREAD_POOL_VALUE = 20;
+	private static final int ALL_THREAD_POOL_VALUE = 10;
 
 	@Value("${localStringUploadPath}")
 	private String localStringUploadPath;
@@ -648,7 +648,7 @@ public class SearchStringServiceImpl implements SearchStringService{
 	@Override
 	public String startReRunProxyString(ConfigProxyRequestDto configProxyRequestDto) {
 		String isProcess="N";
-		configPropertiesRepository.updateStopConfigDetails(2,null);
+		//configPropertiesRepository.updateStopConfigDetails(2,null);
 		ConfigProperties cofigObj = configPropertiesRepository.fetchById(2);
 		if(null != configProxyRequestDto.getSearchString() && null != configProxyRequestDto.getPageNumber()) {
 			ConfigProxyRequestDto configProxyReqDto = new ConfigProxyRequestDto();
@@ -667,6 +667,7 @@ public class SearchStringServiceImpl implements SearchStringService{
 			configProxyReqDto.setMaxResult(configProxyRequestDto.getMaxResult());
 			configProxyReqDto.setPageNumber(configProxyRequestDto.getPageNumber());
 			configProxyReqDto.setPageSize(configProxyRequestDto.getPageSize());
+			configProxyReqDto.setKey("RERUNFAILED");
 			
 			isProcess = stringSingleHit(configProxyReqDto);
 			if(isProcess == "Y") {
@@ -884,26 +885,28 @@ public class SearchStringServiceImpl implements SearchStringService{
 			}else {
 				logger.info("String Process for :::::: "+configProxyRequestDto.getSearchString());
 				mainJsonObj = g.fromJson(result, MainJson.class);
-				savePropertiesData(mainJsonObj);
-				//savePropertiesInFile(result,configProxyRequestDto.getSearchString(), page, maxResult);
+				//savePropertiesData(mainJsonObj);
+				savePropertiesInFile(result,configProxyRequestDto.getSearchString(), page, maxResult);
 				PageTransactionObj.setIsProcess("Y");
 				if(null != mainJsonObj.getResponse()) 
 					PageTransactionObj.setPageSize(mainJsonObj.getResponse().getResult().getPages().getTotalPages());
 				
 				//Save in Page Details
-				int pageDetailsCount = pageStringDetailsRepository.countSearchString(configProxyRequestDto.getSearchString());
-				if(pageDetailsCount == 0) {
-					PageStringDetails pageStringDetailsObj = new PageStringDetails();
-					pageStringDetailsObj.setSearchString(configProxyRequestDto.getSearchString());
-					pageStringDetailsObj.setPageNumber(page);
-					pageStringDetailsObj.setPageSize(Long.parseLong(configProxyRequestDto.getPageSize()));
-					pageStringDetailsObj.setMaxResult(maxResult);
-					pageStringDetailsObj.setUpdatedDate(DateUtil.getCurrentDateTime());
-					pageStringDetailsRepository.save(pageStringDetailsObj);
-				}else {
-					pageStringDetailsRepository.updatePageByString(configProxyRequestDto.getSearchString(), 
-							page, Long.parseLong(configProxyRequestDto.getPageSize()), 
-							maxResult, DateUtil.getCurrentDateTime());
+				if(!configProxyRequestDto.getKey().equalsIgnoreCase("RERUNFAILED")) {
+					int pageDetailsCount = pageStringDetailsRepository.countSearchString(configProxyRequestDto.getSearchString());
+					if(pageDetailsCount == 0) {
+						PageStringDetails pageStringDetailsObj = new PageStringDetails();
+						pageStringDetailsObj.setSearchString(configProxyRequestDto.getSearchString());
+						pageStringDetailsObj.setPageNumber(page);
+						pageStringDetailsObj.setPageSize(Long.parseLong(configProxyRequestDto.getPageSize()));
+						pageStringDetailsObj.setMaxResult(maxResult);
+						pageStringDetailsObj.setUpdatedDate(DateUtil.getCurrentDateTime());
+						pageStringDetailsRepository.save(pageStringDetailsObj);
+					}else {
+						pageStringDetailsRepository.updatePageByString(configProxyRequestDto.getSearchString(), 
+								page, Long.parseLong(configProxyRequestDto.getPageSize()), 
+								maxResult, DateUtil.getCurrentDateTime());
+					}
 				}
 			}
 
@@ -946,6 +949,7 @@ public class SearchStringServiceImpl implements SearchStringService{
 			logger.info("Search String Proxy call for Single Page Hit :: Done");
 			if(null != mainJsonObj) {
 				//isProcess = savePropertiesData(mainJsonObj);
+				isProcess = "Y";
 				logger.info("Main Json Not Null:: File Processed:::");
 			}
 		} catch (Exception e) {

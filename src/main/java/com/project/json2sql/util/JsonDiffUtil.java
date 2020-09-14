@@ -10,7 +10,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class JsonDiffUtil {
 	
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		  String json1 = "{\"name\":\"ABC\", \"city\":\"XYZ\", \"state\":\"CA\"}";
 		  String json2 = "{\"city\":\"XYZ\", \"street\":\"123 anyplace\", \"name\":\"ABC\"}";
 
@@ -20,5 +20,5 @@ public class JsonDiffUtil {
 		  Map<String, Object> secondMap = g.fromJson(json2, mapType);
 		  System.out.println(Maps.difference(firstMap, secondMap));
 		}
-
+*/
 }
